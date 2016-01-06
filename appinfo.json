@@ -9,7 +9,7 @@
         "location"
     ],
     "companyName": "Turner Vink",
-    "longName": "Ribbon",
+    "longName": "Material Ribbon",
     "projectType": "native",
     "resources": {
         "media": [
@@ -142,13 +142,13 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "Ribbon",
+    "shortName": "Material Ribbon",
     "targetPlatforms": [
         "basalt",
         "chalk"
     ],
     "uuid": "6bd4b681-ce03-43d5-8da0-ac5485fdbf61",
-    "versionLabel": "1.0",
+    "versionLabel": "0.1",
     "watchapp": {
         "watchface": true
     }

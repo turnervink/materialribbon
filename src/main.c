@@ -8,7 +8,7 @@
 
 static Window *main_window;
 static Layer *horz_rect_layer, *diag_rect_layer, *batt_layer, *bt_layer, *weathericon_layer;
-static TextLayer *time_layer, *date_layer;
+static TextLayer *time_layer, *date_layer, *temp_layer;
 static GBitmap *batt_icon, *bt_icon, *weather_icon;
 static GPath *horz_rect, *diag_rect, *horz_drop, *diag_drop = NULL;
 
@@ -200,7 +200,6 @@ static void main_window_load(Window *window) {
 	layer_add_child(window_get_root_layer(window), diag_rect_layer);
 	layer_add_child(window_get_root_layer(window), horz_rect_layer);
 	
-	
 	// Set up time & date
 	
 	time_layer = text_layer_create(GRect(2, 0, bounds.size.w, bounds.size.h));
@@ -208,20 +207,19 @@ static void main_window_load(Window *window) {
 	text_layer_set_font(time_layer, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
 	text_layer_set_text(time_layer, "00:00");
 	GSize time_size = text_layer_get_content_size(time_layer);
-	layer_set_frame(text_layer_get_layer(time_layer), GRect(PBL_IF_ROUND_ELSE(23, 7), PBL_IF_ROUND_ELSE(20, 0), time_size.w, time_size.h));
+	layer_set_frame(text_layer_get_layer(time_layer), GRect(PBL_IF_ROUND_ELSE(27, 7), PBL_IF_ROUND_ELSE(20, 0), time_size.w, time_size.h));
 	
 	date_layer = text_layer_create(GRect(2, time_size.h + 3, bounds.size.w, bounds.size.h));
 	text_layer_set_background_color(date_layer, GColorClear);
 	text_layer_set_font(date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
 	text_layer_set_text(date_layer, "MON 01");
 	GSize date_size = text_layer_get_content_size(date_layer);
-	layer_set_frame(text_layer_get_layer(date_layer), GRect(PBL_IF_ROUND_ELSE(25, 9), PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h));
+	layer_set_frame(text_layer_get_layer(date_layer), GRect(PBL_IF_ROUND_ELSE(29, 9), PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h));
 	
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(time_layer));
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
 	
 	update_time();
-	
 	
 	// Set up battery & BT icons
 	
@@ -244,14 +242,19 @@ static void main_window_load(Window *window) {
 	layer_add_child(horz_rect_layer, batt_layer);
 	layer_add_child(horz_rect_layer, bt_layer);
 	
-	
 	// Set up weather layers
 	
-	weathericon_layer = layer_create(GRect(PBL_IF_ROUND_ELSE(131, 111), 95, 20, 23));
+	weathericon_layer = layer_create(GRect(PBL_IF_ROUND_ELSE(152, 122), 73, 20, 23));
 	layer_set_update_proc(weathericon_layer, draw_weathericon);
 	weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING);
 	
+	temp_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(130, 121), 75, 144, 168));
+	text_layer_set_background_color(temp_layer, GColorClear);
+	text_layer_set_font(temp_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+	
+	
 	layer_add_child(diag_rect_layer, weathericon_layer);
+	layer_add_child(diag_rect_layer, text_layer_get_layer(temp_layer));
 }
 
 static void main_window_unload(Window *window) {
@@ -262,6 +265,7 @@ static void main_window_unload(Window *window) {
 	layer_destroy(weathericon_layer);
 	text_layer_destroy(time_layer);
 	text_layer_destroy(date_layer);
+	text_layer_destroy(temp_layer);
 	gbitmap_destroy(batt_icon);
 	gbitmap_destroy(bt_icon);
 	gbitmap_destroy(weather_icon);
@@ -305,10 +309,19 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	
 	if (temp_t) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_TEMP received");
+		
+		snprintf(temp_buffer, sizeof(temp_buffer), "%d°", (int)temp_t->value->int32);
 	}
 	
 	if (tempc_t) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_TEMPC received");
+		
+		snprintf(tempc_buffer, sizeof(tempc_buffer), "%d°", (int)tempc_t->value->int32);
+		text_layer_set_text(temp_layer, tempc_buffer);
+		
+		GRect bounds = layer_get_bounds(window_get_root_layer(main_window));
+		GSize temp_size = text_layer_get_content_size(temp_layer);
+		layer_set_frame(text_layer_get_layer(temp_layer), GRect(PBL_IF_ROUND_ELSE(131, 110), 95, temp_size.w, temp_size.h));
 	}
 	
 	if (id_t) {
