@@ -199,8 +199,10 @@ static void weather_ended() {
 		layer_mark_dirty(weathericon_layer);
 	}*/
 	
-	weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ERROR);
-	layer_mark_dirty(weathericon_layer);
+	if (weather_timeout != NULL) {
+		weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ERROR);
+		layer_mark_dirty(weathericon_layer);
+	}
 }
 
 static void main_window_load(Window *window) {
@@ -334,8 +336,8 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	if (temp_t) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_TEMP received");
 		
-		APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
 		if (weather_timeout != NULL) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
 			app_timer_cancel(weather_timeout);
 			weather_timeout = NULL;
 		}
@@ -346,8 +348,8 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	if (tempc_t) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_TEMPC received");
 		
-		APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
 		if (weather_timeout != NULL) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
 			app_timer_cancel(weather_timeout);
 			weather_timeout = NULL;
 		}
@@ -365,18 +367,18 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		//APP_LOG(APP_LOG_LEVEL_INFO, "Setting updated to true");
 		//updated = true;
 		
-		APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
 		if (weather_timeout != NULL) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
 			app_timer_cancel(weather_timeout);
 			weather_timeout = NULL;
 		}
 		
 		int weatherid = (int)id_t->value->int32;
 		
-		/*if (weather_icon) {
+		if (weather_icon != NULL) {
 			APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in inbox");
 			gbitmap_destroy(weather_icon);
-		}*/
+		}
 		
 		time_t temp = time(NULL);
 		struct tm *tick_time = localtime(&temp);
