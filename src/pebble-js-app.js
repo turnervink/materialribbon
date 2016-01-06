@@ -5,19 +5,16 @@ var xhrRequest = function (url, type, callback) {
   };
 	console.log("Opening request");
   xhr.open(type, url);
-	if (xhr.readyState === 1) {
-		console.log("Connection established, sending request");
-  	xhr.send();
-	} else {
-		console.log("Could not establish connection to OpenWeatherMap");
+	xhr.timeout = 10000;
+	xhr.ontimeout = function() {
 		Pebble.sendAppMessage({'0': 404
-	}, function(e) {
-      console.log('Sent error message');
-  }, function(e) {
-      console.log('Failed to send error message (Oh dear)');
-			console.log(e);
-  });
-	}
+		}, function(e) {
+				console.log('Sent timeout message!');
+		}, function(e) {
+				console.log('Failed to send timeout message');
+		});
+	};
+  xhr.send();
 };
 
 function locationSuccess(pos) {

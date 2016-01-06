@@ -11,8 +11,10 @@ static Layer *horz_rect_layer, *diag_rect_layer, *batt_layer, *bt_layer, *weathe
 static TextLayer *time_layer, *date_layer, *temp_layer;
 static GBitmap *batt_icon, *bt_icon, *weather_icon;
 static GPath *horz_rect, *diag_rect, *horz_drop, *diag_drop = NULL;
+static AppTimer *weather_timeout;
 
 static int lang = 0;
+bool updated = false;
 
 static const GPathInfo HORZ_PATH_POINTS = {
 	.num_points = 4,
@@ -58,7 +60,7 @@ const int WEATHER_ICONS[] = {
 };
 
 static void update_time() {
-    time_t temp = time(NULL);
+  time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
 	
   static char time_buffer[] = "00:00";
@@ -183,6 +185,24 @@ static void draw_weathericon(Layer *layer, GContext *ctx) {
 	graphics_draw_bitmap_in_rect(ctx, weather_icon, layer_get_bounds(weathericon_layer));
 }
 
+static void weather_ended() {
+	APP_LOG(APP_LOG_LEVEL_INFO, "Weather timer ended");
+	
+	/*if (weather_icon) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in weather_ended");
+		gbitmap_destroy(weather_icon);
+	}*/
+	
+	/*if (updated == false) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "Updated is false");
+		weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ERROR);
+		layer_mark_dirty(weathericon_layer);
+	}*/
+	
+	weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ERROR);
+	layer_mark_dirty(weathericon_layer);
+}
+
 static void main_window_load(Window *window) {
 	setup_rects();
 	
@@ -268,6 +288,7 @@ static void main_window_unload(Window *window) {
 	text_layer_destroy(temp_layer);
 	gbitmap_destroy(batt_icon);
 	gbitmap_destroy(bt_icon);
+	APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in main_window_unload");
 	gbitmap_destroy(weather_icon);
 	gpath_destroy(horz_rect);
 	gpath_destroy(diag_rect);
@@ -288,6 +309,9 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		int status = (int)ready_t->value->int32;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Ready status is %d", status);
 		
+		APP_LOG(APP_LOG_LEVEL_INFO, "Starting weather_timeout...");
+		weather_timeout = app_timer_register(10000, weather_ended, NULL);
+		
 		if (status == 0) {
 			APP_LOG(APP_LOG_LEVEL_INFO, "JS reports ready!");
 
@@ -299,22 +323,34 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 			dict_write_uint8(iter, 3, 0);
 
 			// Send the message!
+			/*APP_LOG(APP_LOG_LEVEL_INFO, "Setting updated to false in ready_t");
+			updated = false;*/
 			app_message_outbox_send();
-		}
-		if (status == 404) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Could not connect to OpenWeatherMap");
-			weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ERROR);
+			APP_LOG(APP_LOG_LEVEL_INFO, "Requested weather, starting weather_timeout...");
+			weather_timeout = app_timer_register(10000, weather_ended, NULL);
 		}
 	}
 	
 	if (temp_t) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_TEMP received");
 		
+		APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
+		if (weather_timeout != NULL) {
+			app_timer_cancel(weather_timeout);
+			weather_timeout = NULL;
+		}
+		
 		snprintf(temp_buffer, sizeof(temp_buffer), "%d°", (int)temp_t->value->int32);
 	}
 	
 	if (tempc_t) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_TEMPC received");
+		
+		APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
+		if (weather_timeout != NULL) {
+			app_timer_cancel(weather_timeout);
+			weather_timeout = NULL;
+		}
 		
 		snprintf(tempc_buffer, sizeof(tempc_buffer), "%d°", (int)tempc_t->value->int32);
 		text_layer_set_text(temp_layer, tempc_buffer);
@@ -326,18 +362,43 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	
 	if (id_t) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "Weather ID is %d", (int)id_t->value->int32);
+		//APP_LOG(APP_LOG_LEVEL_INFO, "Setting updated to true");
+		//updated = true;
+		
+		APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
+		if (weather_timeout != NULL) {
+			app_timer_cancel(weather_timeout);
+			weather_timeout = NULL;
+		}
+		
 		int weatherid = (int)id_t->value->int32;
 		
-		if (weather_icon) {
+		/*if (weather_icon) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in inbox");
 			gbitmap_destroy(weather_icon);
-		}
+		}*/
+		
+		time_t temp = time(NULL);
+		struct tm *tick_time = localtime(&temp);
+		int hour = tick_time->tm_hour;
 		
 		if ((weatherid % 900) < 100) {
 			APP_LOG(APP_LOG_LEVEL_INFO, "Picking 900");
 			weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[0]);
 		} else if ((weatherid % 801) == 0) {
 			APP_LOG(APP_LOG_LEVEL_INFO, "Picking 801");
-			weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[5]);
+			if (hour >= 18) { // If it's past 6PM, display the night variant (clear sky moon)
+				weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[9]);
+			} else { // Display the day varient (clear sky sun)
+				weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[5]);
+			}
+		} else if ((weatherid % 800) == 0) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Picking 800 exactly");
+			if (hour >= 18) { // If it's past 6PM, display the night variant (clear sky moon)
+				weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[6]);
+			} else { // Display the day varient (clear sky sun)
+				weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[2]);
+			}
 		} else if ((weatherid % 800) < 100) {
 			APP_LOG(APP_LOG_LEVEL_INFO, "Picking 800");
 			weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[8]);
@@ -377,7 +438,13 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 	update_time();
 	
-	if(tick_time->tm_min % 30 == 0) {
+	if (tick_time->tm_min % 30 == 0) {
+			/*if (weather_icon) {
+				APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in tick_handler");
+				gbitmap_destroy(weather_icon);
+			}*/
+			weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING);
+			layer_mark_dirty(weathericon_layer);
 			// Begin dictionary
 			DictionaryIterator *iter;
 			app_message_outbox_begin(&iter);
@@ -386,7 +453,11 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 			dict_write_uint8(iter, 3, 0);
 
 			// Send the message!
+			APP_LOG(APP_LOG_LEVEL_INFO, "Setting updated to false in tick_handler");
+			updated = false;
 			app_message_outbox_send();
+			APP_LOG(APP_LOG_LEVEL_INFO, "Requested weather update, starting weather_timeout...");
+			weather_timeout = app_timer_register(10000, weather_ended, NULL);
 	}
 }
 
