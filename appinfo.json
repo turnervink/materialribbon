@@ -14,18 +14,6 @@
     "resources": {
         "media": [
             {
-                "file": "images/error.png",
-                "name": "ICON_ERROR",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/loading.png",
-                "name": "ICON_LOADING",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
                 "file": "images/unknown.png",
                 "name": "ICON_UNKNOWN",
                 "targetPlatforms": null,
@@ -40,6 +28,12 @@
             {
                 "file": "images/sun.png",
                 "name": "ICON_SUN",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/snow.png",
+                "name": "ICON_SNOW",
                 "targetPlatforms": null,
                 "type": "bitmap"
             },
@@ -62,8 +56,32 @@
                 "type": "bitmap"
             },
             {
+                "file": "images/low.png",
+                "name": "BATT_LOW",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/loading.png",
+                "name": "ICON_LOADING",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/full.png",
+                "name": "BATT_FULL",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
                 "file": "images/fog.png",
                 "name": "ICON_FOG",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/error.png",
+                "name": "ICON_ERROR",
                 "targetPlatforms": null,
                 "type": "bitmap"
             },
@@ -76,12 +94,6 @@
             {
                 "file": "images/cloudy-night.png",
                 "name": "ICON_CLOUDY_NIGHT",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/snow.png",
-                "name": "ICON_SNOW",
                 "targetPlatforms": null,
                 "type": "bitmap"
             },
@@ -100,12 +112,6 @@
             {
                 "file": "images/bt_connected.png",
                 "name": "IMAGE_CONNECTED",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/full.png",
-                "name": "BATT_FULL",
                 "targetPlatforms": null,
                 "type": "bitmap"
             },
@@ -130,12 +136,6 @@
             {
                 "file": "images/20.png",
                 "name": "BATT_20",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/low.png",
-                "name": "BATT_LOW",
                 "targetPlatforms": null,
                 "type": "bitmap"
             }
