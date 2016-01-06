@@ -375,10 +375,10 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		
 		int weatherid = (int)id_t->value->int32;
 		
-		if (weather_icon != NULL) {
+		/*if (weather_icon) {
 			APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in inbox");
 			gbitmap_destroy(weather_icon);
-		}
+		}*/
 		
 		time_t temp = time(NULL);
 		struct tm *tick_time = localtime(&temp);
@@ -440,7 +440,7 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 	update_time();
 	
-	if (tick_time->tm_min % 30 == 0) {
+	if(tick_time->tm_min % 30 == 0) {
 			/*if (weather_icon) {
 				APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in tick_handler");
 				gbitmap_destroy(weather_icon);
