@@ -3,10 +3,15 @@
         "KEY_READY": 0,
         "KEY_TEMP": 1,
         "KEY_TEMPC": 2,
-        "KEY_WEATHERID": 3
+        "KEY_WEATHERID": 3,
+        "langSel": 4,
+        "useCelsius": 5,
+        "vibeConnect": 6,
+        "vibeDisconnect": 7
     },
     "capabilities": [
-        "location"
+        "location",
+        "configurable"
     ],
     "companyName": "Turner Vink",
     "longName": "Material Ribbon",

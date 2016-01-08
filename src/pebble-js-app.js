@@ -101,3 +101,37 @@ Pebble.addEventListener('appmessage',
     }
   }                     
 );
+
+// Config //
+
+Pebble.addEventListener('showConfiguration', function() {
+  var url = 'http://659196e.ngrok.com/';
+
+  console.log('Showing configuration page: ' + url);
+
+  Pebble.openURL(url);
+});
+
+Pebble.addEventListener('webviewclosed', function(e) {
+  var configData = JSON.parse(decodeURIComponent(e.response));
+
+  console.log('Configuration page returned: ' + JSON.stringify(configData));
+  console.log('Background color is ' + parseInt(configData.textColor, 16));
+
+  if (configData.textColor) { // If we have received the correct data (not sure why we wouldn't, but who knows?)
+    // Send all keys to Pebble
+		console.log("Sending config dict");
+    Pebble.sendAppMessage({
+      useCelsius: configData.useCelsius ? 1 : 0,
+      vibeDisconnect: configData.vibeDisconnect ? 1 : 0,
+      vibeConnect: configData.vibeConnect ? 1 : 0,
+      langSel: configData.langSel
+    }, function(e) {
+      console.log('Send successful!');
+			console.log(e);
+    }, function(e) {
+      console.log('Send failed!');
+			console.log(e);
+    });
+  }
+});
