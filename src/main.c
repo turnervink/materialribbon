@@ -13,15 +13,17 @@
 static Window *main_window;
 static Layer *horz_rect_layer, *diag_rect_layer, *batt_layer, *bt_layer, *weathericon_layer;
 static TextLayer *time_layer, *date_layer, *temp_layer;
-static GBitmap *batt_icon, *bt_icon, *weather_icon;
+static GBitmap *batt_icon, *bt_icon;
+static GBitmap *weather_icon = NULL;
 static GPath *horz_rect, *diag_rect, *horz_drop, *diag_drop = NULL;
 static AppTimer *weather_timeout, *ready_timeout;
 
-static bool use_celsius = 0;
+static bool use_celsius = 1;
 static bool vibe_on_connect = 0;
 static bool vibe_on_disconnect = 1;
 
-static int lang = 0;
+//static int lang = 0;
+static int lang;
 static int timeout = 30000;
 
 static const GPathInfo HORZ_PATH_POINTS = {
@@ -95,41 +97,34 @@ static void update_time() {
   time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
 	
-  static char time_buffer[] = "00:00";
-  static char datn_buffer[] = "DD"; // Buffer for date number
-  static char date_buffer[] = "WWW MMM DD"; // Buffer for entire date to display
+  static char time_buffer[] = "00:00"; // Buffer for full time (24h)
+	static char min_buffer[] = "00"; // Buffer for minutes
+  static char date_buffer[] = "WWW DD"; // Buffer for entire date to display
   
-	int hour = tick_time->tm_hour;
-	if (hour > 12) {
+	int hour = tick_time->tm_hour; // Get the current hour
+	
+	if (hour > 12) { // Convert to 12h time if needed
 		hour = hour - 12;
-	} else if (hour == 0) {
+	} else if (hour == 0) { // Show midnight as 12
 		hour = 12;
 	}
-	int min = tick_time->tm_min;
 	
   if(clock_is_24h_style() == true) {
-    strftime(time_buffer, sizeof("00:00"), "%H:%M", tick_time);
+    strftime(time_buffer, sizeof("00:00"), "%H:%M", tick_time); // Display time_buffer if 24h time is selected
   } else {
-    //strftime(time_buffer, sizeof("00:00"), "%l:%M", tick_time);
-		snprintf(time_buffer, sizeof(time_buffer), "%d:%d", hour, min);
+    strftime(min_buffer, sizeof(min_buffer), "%M", tick_time); // Grab the minute from strftime
+		snprintf(time_buffer, sizeof(time_buffer), "%d:%s", hour, min_buffer); // Combine our interger hour and strftime min
   }
 	
-	text_layer_set_text(time_layer, time_buffer);
-	//GSize time_size = text_layer_get_content_size(time_layer);
-	//layer_set_frame(text_layer_get_layer(time_layer), GRect(PBL_IF_ROUND_ELSE(27, 7), PBL_IF_ROUND_ELSE(20, 0), time_size.w, time_size.h));
+	text_layer_set_text(time_layer, time_buffer); // Display the time info
 
 	int day = tick_time->tm_mday;
 	int weekday = tick_time->tm_wday; // Get current weekday as an integer (0 is Sunday)
-	if (date_buffer[0] == 0) {
-			memmove(&date_buffer[0], &date_buffer[1], sizeof(date_buffer) - 1);
-	}
 	
 	// Select the correct strings from languages.c and write to buffer along with date
 	snprintf(date_buffer, sizeof(date_buffer), "%s %d", dayNames[lang][weekday], day);
 
 	text_layer_set_text(date_layer, date_buffer); // Display the date info
-	//GSize date_size = text_layer_get_content_size(date_layer);
-	//layer_set_frame(text_layer_get_layer(date_layer), GRect(PBL_IF_ROUND_ELSE(29, 9), PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h));
 }
 
 static void weather_ended() {
@@ -270,7 +265,7 @@ static void draw_weathericon(Layer *layer, GContext *ctx) {
 }
 
 static void ready_ended() {
-	APP_LOG(APP_LOG_LEVEL_INFO, "Ready timer is not NULL");
+	APP_LOG(APP_LOG_LEVEL_INFO, "Ready timer ended");
 	
 	if (ready_timeout != NULL) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "Ready timer is not NULL");
@@ -296,8 +291,7 @@ static void main_window_load(Window *window) {
 	layer_add_child(window_get_root_layer(window), diag_rect_layer);
 	layer_add_child(window_get_root_layer(window), horz_rect_layer);
 	
-	// Set up time & date
-	
+	// Set up time & date (Commented frames are final positions)
 	time_layer = text_layer_create(GRect(2, 0, bounds.size.w, bounds.size.h));
 	text_layer_set_background_color(time_layer, GColorClear);
 	text_layer_set_font(time_layer, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
@@ -318,7 +312,6 @@ static void main_window_load(Window *window) {
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
 	
 	// Set up battery & BT icons
-	
 	batt_layer = layer_create(GRect(PBL_IF_ROUND_ELSE(30, 5), 125, 14, 26));
 	layer_set_update_proc(batt_layer, draw_batt);
 	
@@ -339,18 +332,26 @@ static void main_window_load(Window *window) {
 	layer_add_child(horz_rect_layer, bt_layer);
 	
 	// Set up weather layers
-	
 	weathericon_layer = layer_create(GRect(PBL_IF_ROUND_ELSE(160, 122), 73, 20, 23));
 	layer_set_update_proc(weathericon_layer, draw_weathericon);
 	weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING);
 	
-	temp_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(130, 121), 75, 144, 168));
+	//temp_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(130, 121), 75, 144, 168));
+	temp_layer = text_layer_create(GRect(0, 0, 0, 0));
 	text_layer_set_background_color(temp_layer, GColorClear);
 	text_layer_set_font(temp_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 	
-	
 	layer_add_child(diag_rect_layer, weathericon_layer);
 	layer_add_child(diag_rect_layer, text_layer_get_layer(temp_layer));
+	
+	// Check for existing keys
+	if (persist_exists(KEY_LANG)) {
+		lang = persist_read_int(KEY_LANG);
+	}
+	
+	if (persist_exists(KEY_USECELSIUS)) {
+		use_celsius = persist_read_int(KEY_USECELSIUS);
+	}
 }
 
 static void main_window_unload(Window *window) {
@@ -364,7 +365,6 @@ static void main_window_unload(Window *window) {
 	text_layer_destroy(temp_layer);
 	gbitmap_destroy(batt_icon);
 	gbitmap_destroy(bt_icon);
-	APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in main_window_unload");
 	gbitmap_destroy(weather_icon);
 	gpath_destroy(horz_rect);
 	gpath_destroy(diag_rect);
@@ -374,7 +374,7 @@ static void main_window_unload(Window *window) {
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	static char temp_buffer[5];
-	static char tempc_buffer [5];
+	static char tempc_buffer[5];
 	
 	Tuple *ready_t = dict_find(iter, KEY_READY); // cstring
 	Tuple *temp_t = dict_find(iter, KEY_TEMP); // int32
@@ -382,6 +382,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	Tuple *id_t = dict_find(iter, KEY_WEATHERID); // int32
 	
 	Tuple *lang_t = dict_find(iter, KEY_LANG); // cstring
+	Tuple *usecelsius_t = dict_find(iter, KEY_USECELSIUS); // int8
 	Tuple *vibeconnect_t = dict_find(iter, KEY_VIBE_ON_CONNECT); // int8
 	Tuple *vibedisconnect_t = dict_find(iter, KEY_VIBE_ON_DISCONNECT); // int8
 	
@@ -409,8 +410,6 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 			dict_write_uint8(iter, 3, 0);
 
 			// Send the message!
-			/*APP_LOG(APP_LOG_LEVEL_INFO, "Setting updated to false in ready_t");
-			updated = false;*/
 			app_message_outbox_send();
 			APP_LOG(APP_LOG_LEVEL_INFO, "Requested weather, starting weather_timeout...");
 			weather_timeout = app_timer_register(timeout, weather_ended, NULL);
@@ -427,6 +426,13 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		}
 		
 		snprintf(temp_buffer, sizeof(temp_buffer), "%d°", (int)temp_t->value->int32);
+		text_layer_set_text(temp_layer, temp_buffer);
+		GSize temp_size = text_layer_get_content_size(temp_layer);
+		const char* textis = text_layer_get_text(temp_layer);
+		APP_LOG(APP_LOG_LEVEL_INFO, "Width is %d in temp_t", temp_size.w);
+		APP_LOG(APP_LOG_LEVEL_INFO, "Height is %d in temp_t", temp_size.h);
+		APP_LOG(APP_LOG_LEVEL_INFO, "temp_layer: %s", textis);
+		APP_LOG(APP_LOG_LEVEL_INFO, "temp_buffer: %s", temp_buffer);
 	}
 	
 	if (tempc_t) {
@@ -439,11 +445,28 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		}
 		
 		snprintf(tempc_buffer, sizeof(tempc_buffer), "%d°", (int)tempc_t->value->int32);
+	}
+	
+	if (usecelsius_t) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_USE_CELSIUS received!");
+
+  	use_celsius = usecelsius_t->value->int8;
+
+  	persist_write_int(KEY_USECELSIUS, use_celsius);
+	}	
+	
+	if (use_celsius == 1) {
 		text_layer_set_text(temp_layer, tempc_buffer);
-		
-		GRect bounds = layer_get_bounds(window_get_root_layer(main_window));
 		GSize temp_size = text_layer_get_content_size(temp_layer);
-		layer_set_frame(text_layer_get_layer(temp_layer), GRect(PBL_IF_ROUND_ELSE(145 - (temp_size.w / 2), 123 - (temp_size.w / 2)), 95, temp_size.w, temp_size.h));
+		APP_LOG(APP_LOG_LEVEL_INFO, "Width is %d", temp_size.w);
+		layer_set_frame(text_layer_get_layer(temp_layer), GRect(PBL_IF_ROUND_ELSE(145 - (temp_size.w / 2), 123 - (temp_size.w / 2)), 95, 30, 30));
+		//text_layer_set_size(temp_layer, temp_size);
+	} else {
+		text_layer_set_text(temp_layer, temp_buffer);
+		GSize temp_size = text_layer_get_content_size(temp_layer);
+		APP_LOG(APP_LOG_LEVEL_INFO, "Width is %d", temp_size.w);
+		layer_set_frame(text_layer_get_layer(temp_layer), GRect(PBL_IF_ROUND_ELSE(145 - (temp_size.w / 2), 123 - (temp_size.w / 2)), 95, 30, 30));
+		//text_layer_set_size(temp_layer, temp_size);
 	}
 	
 	if (id_t) {
@@ -458,12 +481,12 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		}
 		
 		int weatherid = (int)id_t->value->int32;
-		//int weatherid = 900;
+		//int weatherid = 900; // Hardcoded for testing
 		
-		/*if (weather_icon) {
+		if (weather_icon != NULL) {
 			APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in inbox");
 			gbitmap_destroy(weather_icon);
-		}*/
+		}
 		
 		time_t temp = time(NULL);
 		struct tm *tick_time = localtime(&temp);
@@ -530,6 +553,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   	}
 		
 		persist_write_int(KEY_LANG, lang);
+		update_time();
 	}
 	
 	if (vibeconnect_t) {
@@ -563,6 +587,10 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 	update_time();
 	
 	if(tick_time->tm_min % 30 == 0) {
+			if (weather_icon != NULL) {
+				APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in tick_handler");
+				gbitmap_destroy(weather_icon);
+			}
 			weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING);
 			layer_mark_dirty(weathericon_layer);
 			text_layer_set_text(temp_layer, " ");

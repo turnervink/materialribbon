@@ -19,7 +19,7 @@ var xhrRequest = function (url, type, callback) {
 
 function locationSuccess(pos) {
   // Construct URL
-  var url = 'http://api.openweathermap.org/data/2.5/weather?lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude + '&appid=2874bea34ea1f91820fa07af69939eea&lang=';
+  var url = 'http://api.openweathermap.org/data/2.5/weather?lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude + '&appid=2874bea34ea1f91820fa07af69939eea';
   
   console.log("Lat is " + pos.coords.latitude);
   console.log("Lon is " + pos.coords.longitude);
@@ -116,9 +116,8 @@ Pebble.addEventListener('webviewclosed', function(e) {
   var configData = JSON.parse(decodeURIComponent(e.response));
 
   console.log('Configuration page returned: ' + JSON.stringify(configData));
-  console.log('Background color is ' + parseInt(configData.textColor, 16));
 
-  if (configData.textColor) { // If we have received the correct data (not sure why we wouldn't, but who knows?)
+  if (configData.useCelsius >= 0) { // If we have received the correct data (not sure why we wouldn't, but who knows?)
     // Send all keys to Pebble
 		console.log("Sending config dict");
     Pebble.sendAppMessage({
