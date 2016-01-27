@@ -5,6 +5,7 @@
         "KEY_TEMPC": 2,
         "KEY_WEATHERID": 3,
         "langSel": 4,
+        "showWeather": 8,
         "useCelsius": 5,
         "vibeConnect": 6,
         "vibeDisconnect": 7
@@ -153,7 +154,7 @@
         "chalk"
     ],
     "uuid": "6bd4b681-ce03-43d5-8da0-ac5485fdbf61",
-    "versionLabel": "0.2",
+    "versionLabel": "0.3",
     "watchapp": {
         "watchface": true
     }

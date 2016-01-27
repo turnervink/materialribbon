@@ -102,10 +102,10 @@ Pebble.addEventListener('appmessage',
   }                     
 );
 
-// Config //
+//===== Config =====//
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'http://659196e.ngrok.com/';
+  var url = 'http://turnervink.github.io/materialribbon-config/';
 
   console.log('Showing configuration page: ' + url);
 
@@ -120,8 +120,10 @@ Pebble.addEventListener('webviewclosed', function(e) {
   if (configData.useCelsius >= 0) { // If we have received the correct data (not sure why we wouldn't, but who knows?)
     // Send all keys to Pebble
 		console.log("Sending config dict");
+		console.log("showWeather: " + configData.showWeather);
     Pebble.sendAppMessage({
       useCelsius: configData.useCelsius ? 1 : 0,
+			showWeather: configData.showWeather ? 1 : 0,
       vibeDisconnect: configData.vibeDisconnect ? 1 : 0,
       vibeConnect: configData.vibeConnect ? 1 : 0,
       langSel: configData.langSel

@@ -9,6 +9,7 @@
 #define KEY_USECELSIUS 5
 #define KEY_VIBE_ON_CONNECT 6
 #define KEY_VIBE_ON_DISCONNECT 7
+#define KEY_SHOW_WEATHER 8
 
 static Window *main_window;
 static Layer *horz_rect_layer, *diag_rect_layer, *batt_layer, *bt_layer, *weathericon_layer;
@@ -18,11 +19,13 @@ static GBitmap *weather_icon = NULL;
 static GPath *horz_rect, *diag_rect, *horz_drop, *diag_drop = NULL;
 static AppTimer *weather_timeout, *ready_timeout;
 
+// Config options
 static bool use_celsius = 1;
+static bool show_weather = 1;
 static bool vibe_on_connect = 0;
 static bool vibe_on_disconnect = 1;
 
-//static int lang = 0;
+//static int lang = 0; // Hardcoded for testing
 static int lang;
 static int timeout = 30000;
 
@@ -93,6 +96,17 @@ void animate_layer(Layer *layer, GRect *start, GRect *finish, int duration, int 
     animation_schedule((Animation*) anim);
 }
 
+static void weather_ended() {
+	// If the weather can't be updated show the error icon
+	APP_LOG(APP_LOG_LEVEL_INFO, "Weather timer ended");
+	
+	if (weather_timeout != NULL) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "Weather timer is not NULL");
+		weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ERROR);
+		layer_mark_dirty(weathericon_layer);
+	}
+}
+
 static void update_time() {
   time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
@@ -127,17 +141,46 @@ static void update_time() {
 	text_layer_set_text(date_layer, date_buffer); // Display the date info
 }
 
-static void weather_ended() {
-	APP_LOG(APP_LOG_LEVEL_INFO, "Weather timer ended");
+static void update_weather() {
+	// Show the loading icon, request the weather, and start the timeout
+	weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING);
+	layer_mark_dirty(weathericon_layer);
+	GRect icon = gbitmap_get_bounds(weather_icon);
+	layer_set_frame(weathericon_layer, GRect(PBL_IF_ROUND_ELSE(165 - (icon.size.w / 2), 133 - (icon.size.w / 2)), 73, 20, 23));
 	
+	// Begin dictionary
+	DictionaryIterator *iter;
+	app_message_outbox_begin(&iter);
+
+	// Add a key-value pair
+	dict_write_uint8(iter, 3, 0);
+
+	// Send the message!
+	app_message_outbox_send();
+	APP_LOG(APP_LOG_LEVEL_INFO, "Requested weather, starting weather_timeout...");
+	weather_timeout = app_timer_register(timeout, weather_ended, NULL);
+}
+
+static void cancel_ready_timeout() {
+	// Cancel the timeout once JS is ready
+	if (ready_timeout != NULL) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling ready timer");
+			app_timer_cancel(ready_timeout);
+			ready_timeout = NULL;
+	}
+}
+
+static void cancel_weather_timeout() {
+	// Cancel the timeout once weather is received
 	if (weather_timeout != NULL) {
-		APP_LOG(APP_LOG_LEVEL_INFO, "Weather timer is not NULL");
-		weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ERROR);
-		layer_mark_dirty(weathericon_layer);
+			APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
+			app_timer_cancel(weather_timeout);
+			weather_timeout = NULL;
 	}
 }
 
 static void init_animations() {
+	// Move things all fancy like
 	GRect bounds = layer_get_bounds(window_get_root_layer(main_window));
 	GSize time_size = text_layer_get_content_size(time_layer);
 	GSize date_size = text_layer_get_content_size(date_layer);
@@ -197,10 +240,14 @@ static void bt_handler(bool connected) {
 	}
 	
 	if (connected) {
-		vibes_double_pulse();
+		if (vibe_on_connect == 1) {
+			vibes_double_pulse();
+		}
 		bt_icon = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CONNECTED);
 	} else {
-		vibes_long_pulse();
+		if (vibe_on_disconnect == 1) {
+			vibes_long_pulse();
+		}
 		bt_icon = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DISCONNECTED);
 	}
 	
@@ -265,6 +312,7 @@ static void draw_weathericon(Layer *layer, GContext *ctx) {
 }
 
 static void ready_ended() {
+	// Is JS does not init fast enough show the ready icon
 	APP_LOG(APP_LOG_LEVEL_INFO, "Ready timer ended");
 	
 	if (ready_timeout != NULL) {
@@ -352,9 +400,22 @@ static void main_window_load(Window *window) {
 	if (persist_exists(KEY_USECELSIUS)) {
 		use_celsius = persist_read_int(KEY_USECELSIUS);
 	}
+	
+	if (persist_exists(KEY_SHOW_WEATHER)) {
+		show_weather = persist_read_int(KEY_SHOW_WEATHER);
+	}
+	
+	if (show_weather == 0) {
+		layer_set_hidden(text_layer_get_layer(temp_layer), true);
+		layer_set_hidden(weathericon_layer, true);
+	} else {
+		layer_set_hidden(text_layer_get_layer(temp_layer), false);
+		layer_set_hidden(weathericon_layer, false);
+	}
 }
 
 static void main_window_unload(Window *window) {
+	// http://bit.ly/1ZvbJIb
 	layer_destroy(horz_rect_layer);
 	layer_destroy(diag_rect_layer);
 	layer_destroy(batt_layer);
@@ -383,6 +444,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	
 	Tuple *lang_t = dict_find(iter, KEY_LANG); // cstring
 	Tuple *usecelsius_t = dict_find(iter, KEY_USECELSIUS); // int8
+	Tuple *showweather_t = dict_find(iter, KEY_SHOW_WEATHER); //int8
 	Tuple *vibeconnect_t = dict_find(iter, KEY_VIBE_ON_CONNECT); // int8
 	Tuple *vibedisconnect_t = dict_find(iter, KEY_VIBE_ON_DISCONNECT); // int8
 	
@@ -390,59 +452,25 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		int status = (int)ready_t->value->int32;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Ready status is %d", status);
 		
-		if (ready_timeout != NULL) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling ready timer");
-			app_timer_cancel(ready_timeout);
-			ready_timeout = NULL;
-		}
-		
-		APP_LOG(APP_LOG_LEVEL_INFO, "Starting weather_timeout...");
-		weather_timeout = app_timer_register(timeout, weather_ended, NULL);
+		cancel_ready_timeout();
 		
 		if (status == 0) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "JS reports ready!");
-
-			// Begin dictionary
-			DictionaryIterator *iter;
-			app_message_outbox_begin(&iter);
-
-			// Add a key-value pair
-			dict_write_uint8(iter, 3, 0);
-
-			// Send the message!
-			app_message_outbox_send();
-			APP_LOG(APP_LOG_LEVEL_INFO, "Requested weather, starting weather_timeout...");
-			weather_timeout = app_timer_register(timeout, weather_ended, NULL);
+			if (show_weather == 1) {
+				update_weather();
+			}
 		}
 	}
 	
 	if (temp_t) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_TEMP received");
-		
-		if (weather_timeout != NULL) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
-			app_timer_cancel(weather_timeout);
-			weather_timeout = NULL;
-		}
+		cancel_weather_timeout();
 		
 		snprintf(temp_buffer, sizeof(temp_buffer), "%d°", (int)temp_t->value->int32);
-		text_layer_set_text(temp_layer, temp_buffer);
-		GSize temp_size = text_layer_get_content_size(temp_layer);
-		const char* textis = text_layer_get_text(temp_layer);
-		APP_LOG(APP_LOG_LEVEL_INFO, "Width is %d in temp_t", temp_size.w);
-		APP_LOG(APP_LOG_LEVEL_INFO, "Height is %d in temp_t", temp_size.h);
-		APP_LOG(APP_LOG_LEVEL_INFO, "temp_layer: %s", textis);
-		APP_LOG(APP_LOG_LEVEL_INFO, "temp_buffer: %s", temp_buffer);
 	}
 	
 	if (tempc_t) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_TEMPC received");
-		
-		if (weather_timeout != NULL) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
-			app_timer_cancel(weather_timeout);
-			weather_timeout = NULL;
-		}
+		cancel_weather_timeout();
 		
 		snprintf(tempc_buffer, sizeof(tempc_buffer), "%d°", (int)tempc_t->value->int32);
 	}
@@ -455,33 +483,46 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   	persist_write_int(KEY_USECELSIUS, use_celsius);
 	}	
 	
+	if (showweather_t) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_SHOW_WEATHER received!");
+		
+		show_weather = showweather_t->value->int8;
+		APP_LOG(APP_LOG_LEVEL_INFO, "show_weather: %d", show_weather);
+		
+		persist_write_int(KEY_SHOW_WEATHER, show_weather);
+		if (show_weather == 1) {
+			update_weather();
+		}
+	}
+	
 	if (use_celsius == 1) {
 		text_layer_set_text(temp_layer, tempc_buffer);
 		GSize temp_size = text_layer_get_content_size(temp_layer);
 		APP_LOG(APP_LOG_LEVEL_INFO, "Width is %d", temp_size.w);
 		layer_set_frame(text_layer_get_layer(temp_layer), GRect(PBL_IF_ROUND_ELSE(145 - (temp_size.w / 2), 123 - (temp_size.w / 2)), 95, 30, 30));
-		//text_layer_set_size(temp_layer, temp_size);
 	} else {
 		text_layer_set_text(temp_layer, temp_buffer);
 		GSize temp_size = text_layer_get_content_size(temp_layer);
 		APP_LOG(APP_LOG_LEVEL_INFO, "Width is %d", temp_size.w);
 		layer_set_frame(text_layer_get_layer(temp_layer), GRect(PBL_IF_ROUND_ELSE(145 - (temp_size.w / 2), 123 - (temp_size.w / 2)), 95, 30, 30));
-		//text_layer_set_size(temp_layer, temp_size);
+	}
+	
+	if (show_weather == 0) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "Hiding weather");
+		layer_set_hidden(text_layer_get_layer(temp_layer), true);
+		layer_set_hidden(weathericon_layer, true);
+	} else {
+		APP_LOG(APP_LOG_LEVEL_INFO, "Showing weather");
+		layer_set_hidden(text_layer_get_layer(temp_layer), false);
+		layer_set_hidden(weathericon_layer, false);
 	}
 	
 	if (id_t) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "Weather ID is %d", (int)id_t->value->int32);
-		//APP_LOG(APP_LOG_LEVEL_INFO, "Setting updated to true");
-		//updated = true;
-		
-		if (weather_timeout != NULL) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
-			app_timer_cancel(weather_timeout);
-			weather_timeout = NULL;
-		}
+		cancel_weather_timeout();
 		
 		int weatherid = (int)id_t->value->int32;
-		//int weatherid = 900; // Hardcoded for testing
+		//int weatherid = 2; // Hardcoded for testing
 		
 		if (weather_icon != NULL) {
 			APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in inbox");
@@ -492,14 +533,15 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		struct tm *tick_time = localtime(&temp);
 		int hour = tick_time->tm_hour;
 		
+		// Pick the right icon
 		if ((weatherid % 900) < 100) {
 			APP_LOG(APP_LOG_LEVEL_INFO, "Picking 900");
 			weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[0]);
 		} else if ((weatherid % 801) == 0) {
 			APP_LOG(APP_LOG_LEVEL_INFO, "Picking 801");
-			if (hour >= 18) { // If it's past 6PM, display the night variant (clear sky moon)
+			if (hour >= 18) { // If it's past 6PM, display the night variant (partly cloudy moon)
 				weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[9]);
-			} else { // Display the day varient (clear sky sun)
+			} else { // Display the day varient (partly cloudy sun)
 				weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[5]);
 			}
 		} else if ((weatherid % 800) == 0) {
@@ -529,6 +571,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 			weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[0]);
 		}
 		
+		// Put it in the right place
 		GRect icon = gbitmap_get_bounds(weather_icon);
 		layer_set_frame(weathericon_layer, GRect(PBL_IF_ROUND_ELSE(165 - (icon.size.w / 2), 133 - (icon.size.w / 2)), 73, 20, 23));
 		layer_mark_dirty(weathericon_layer);
@@ -591,20 +634,9 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 				APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in tick_handler");
 				gbitmap_destroy(weather_icon);
 			}
-			weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING);
-			layer_mark_dirty(weathericon_layer);
-			text_layer_set_text(temp_layer, " ");
-			// Begin dictionary
-			DictionaryIterator *iter;
-			app_message_outbox_begin(&iter);
-
-			// Add a key-value pair
-			dict_write_uint8(iter, 3, 0);
-
-			// Send the message!
-			app_message_outbox_send();
-			APP_LOG(APP_LOG_LEVEL_INFO, "Requested weather update, starting weather_timeout...");
-			weather_timeout = app_timer_register(timeout, weather_ended, NULL);
+			if (show_weather == 1) {
+				update_weather();
+			}
 	}
 }
 
@@ -630,7 +662,8 @@ static void init() {
 	app_message_register_outbox_failed(outbox_failed_callback);
 	app_message_register_outbox_sent(outbox_sent_callback);
 	
-	int buffer_in = dict_calc_buffer_size(4, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t));
+	// Create buffers based on what we are sending/receiving
+	int buffer_in = dict_calc_buffer_size(4, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t), sizeof(char), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t));
 	int buffer_out = dict_calc_buffer_size(1, sizeof(int32_t));
 	app_message_open(buffer_in, buffer_out);
 	
