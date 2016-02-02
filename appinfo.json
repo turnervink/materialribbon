@@ -20,6 +20,13 @@
     "resources": {
         "media": [
             {
+                "file": "images/materialribbonicon.png",
+                "menuIcon": true,
+                "name": "IMAGE_MENUICON",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
                 "file": "images/unknown.png",
                 "name": "ICON_UNKNOWN",
                 "targetPlatforms": null,
@@ -148,13 +155,13 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "Material Ribbon",
+    "shortName": "Mat. Ribbon",
     "targetPlatforms": [
         "basalt",
         "chalk"
     ],
     "uuid": "6bd4b681-ce03-43d5-8da0-ac5485fdbf61",
-    "versionLabel": "0.3",
+    "versionLabel": "1.0",
     "watchapp": {
         "watchface": true
     }

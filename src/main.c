@@ -25,7 +25,7 @@ static bool show_weather = 1;
 static bool vibe_on_connect = 0;
 static bool vibe_on_disconnect = 1;
 
-//static int lang = 0; // Hardcoded for testing
+//static int lang = 4; // Hardcoded for testing
 static int lang;
 static int timeout = 30000;
 
@@ -104,6 +104,7 @@ static void weather_ended() {
 		APP_LOG(APP_LOG_LEVEL_INFO, "Weather timer is not NULL");
 		weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ERROR);
 		layer_mark_dirty(weathericon_layer);
+		text_layer_set_text(temp_layer, " ");
 	}
 }
 
@@ -137,7 +138,7 @@ static void update_time() {
 	
 	// Select the correct strings from languages.c and write to buffer along with date
 	snprintf(date_buffer, sizeof(date_buffer), "%s %d", dayNames[lang][weekday], day);
-
+	
 	text_layer_set_text(date_layer, date_buffer); // Display the date info
 }
 
@@ -147,6 +148,7 @@ static void update_weather() {
 	layer_mark_dirty(weathericon_layer);
 	GRect icon = gbitmap_get_bounds(weather_icon);
 	layer_set_frame(weathericon_layer, GRect(PBL_IF_ROUND_ELSE(165 - (icon.size.w / 2), 133 - (icon.size.w / 2)), 73, 20, 23));
+	text_layer_set_text(temp_layer, " ");
 	
 	// Begin dictionary
 	DictionaryIterator *iter;
@@ -663,7 +665,7 @@ static void init() {
 	app_message_register_outbox_sent(outbox_sent_callback);
 	
 	// Create buffers based on what we are sending/receiving
-	int buffer_in = dict_calc_buffer_size(4, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t), sizeof(char), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t));
+	int buffer_in = dict_calc_buffer_size(4, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t), sizeof(char), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t));
 	int buffer_out = dict_calc_buffer_size(1, sizeof(int32_t));
 	app_message_open(buffer_in, buffer_out);
 	
