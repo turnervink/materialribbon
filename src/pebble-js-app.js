@@ -19,7 +19,7 @@ var xhrRequest = function (url, type, callback) {
 
 function locationSuccess(pos) {
   // Construct URL
-  var url = 'http://api.openweathermap.org/data/2.5/weather?lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude + '&appid=2874bea34ea1f91820fa07af69939eea&lang=';
+  var url = 'http://api.openweathermap.org/data/2.5/weather?lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude + '&appid=2874bea34ea1f91820fa07af69939eea';
   
   console.log("Lat is " + pos.coords.latitude);
   console.log("Lon is " + pos.coords.longitude);
@@ -101,3 +101,40 @@ Pebble.addEventListener('appmessage',
     }
   }                     
 );
+
+//===== Config =====//
+
+Pebble.addEventListener('showConfiguration', function() {
+  var url = 'http://c7e02521.ngrok.io';
+
+  console.log('Showing configuration page: ' + url);
+
+  Pebble.openURL(url);
+});
+
+Pebble.addEventListener('webviewclosed', function(e) {
+  var configData = JSON.parse(decodeURIComponent(e.response));
+
+  console.log('Configuration page returned: ' + JSON.stringify(configData));
+
+  if (configData.useCelsius >= 0) { // If we have received the correct data (not sure why we wouldn't, but who knows?)
+    // Send all keys to Pebble
+		console.log("Sending config dict");
+		console.log("showWeather: " + configData.showWeather);
+    Pebble.sendAppMessage({
+      useCelsius: configData.useCelsius ? 1 : 0,
+			showWeather: configData.showWeather ? 1 : 0,
+      vibeDisconnect: configData.vibeDisconnect ? 1 : 0,
+      vibeConnect: configData.vibeConnect ? 1 : 0,
+      langSel: configData.langSel,
+			colourScheme: parseInt(configData.colourScheme, 8),
+			//colourScheme: 5
+    }, function(e) {
+      console.log('Send successful!');
+			console.log(e);
+    }, function(e) {
+      console.log('Send failed!');
+			console.log(e);
+    });
+  }
+});

@@ -1,20 +1,40 @@
 #include <pebble.h>
 #include "languages.h"
-
-#define KEY_READY 0
-#define KEY_TEMP 1
-#define KEY_TEMPC 2
-#define KEY_WEATHERID 3
+#include "messaging.h"
+#include "gbitmap_color_palette_manipulator.h"
 
 static Window *main_window;
-static Layer *horz_rect_layer, *diag_rect_layer, *batt_layer, *bt_layer, *weathericon_layer;
-static TextLayer *time_layer, *date_layer, *temp_layer;
-static GBitmap *batt_icon, *bt_icon, *weather_icon;
-static GPath *horz_rect, *diag_rect, *horz_drop, *diag_drop = NULL;
-static AppTimer *weather_timeout;
+static Layer *horz_rect_layer, *diag_rect_layer, *batt_layer, *bt_layer;
+static TextLayer *time_layer, *date_layer;
+static GBitmap *batt_icon, *bt_icon;
+static GFont time_font, date_font;
 
-static int lang = 0;
-bool updated = false;
+// Accessible across files:
+AppTimer *weather_timeout, *ready_timeout;
+GBitmap *weather_icon = NULL;
+TextLayer *temp_layer;
+Layer *weathericon_layer;
+
+//static int lang = 4; // Hardcoded for testing
+int lang;
+int timeout = 30000;
+
+// Config options
+bool use_celsius = 1;
+bool show_weather = 1;
+bool vibe_on_connect = 0;
+bool vibe_on_disconnect = 1;
+int colourscheme = 0;
+//static int testscheme = 4;
+//static bool usewhiteicons = 0;
+
+// Colours for schemes of the colour variety
+static GColor horz;
+static GColor horzdrop;
+static GColor diag;
+static GColor diagdrop;
+
+static GPath *horz_rect, *diag_rect, *horz_drop, *diag_drop = NULL;
 
 static const GPathInfo HORZ_PATH_POINTS = {
 	.num_points = 4,
@@ -46,42 +66,89 @@ const int BATT_ICONS[] = {
 	RESOURCE_ID_BATT_CHARGING	// 6
 };
 
-const int WEATHER_ICONS[] = {
-	RESOURCE_ID_ICON_UNKNOWN,				// 0
-	RESOURCE_ID_ICON_THUNDERSTORM,	// 1
-	RESOURCE_ID_ICON_SUN,						// 2
-	RESOURCE_ID_ICON_SNOW,					// 3
-	RESOURCE_ID_ICON_RAIN,					// 4
-	RESOURCE_ID_ICON_PARTLY_CLOUDY,	// 5
-	RESOURCE_ID_ICON_NIGHT,					// 6
-	RESOURCE_ID_ICON_FOG,						// 7
-	RESOURCE_ID_ICON_CLOUDY,				// 8
-	RESOURCE_ID_ICON_CLOUDY_NIGHT		// 9
-};
+void on_animation_stopped(Animation *anim, bool finished, void *context) {
+    //Free the memory used by the Animation
+    property_animation_destroy((PropertyAnimation*) anim);
+}
 
-static void update_time() {
+void animate_layer(Layer *layer, GRect *start, GRect *finish, int duration, int delay) {
+    //Declare animation
+    PropertyAnimation *anim = property_animation_create_layer_frame(layer, start, finish);
+ 
+    //Set characteristics
+    animation_set_duration((Animation*) anim, duration);
+    animation_set_delay((Animation*) anim, delay);
+ 
+    //Set stopped handler to free memory
+    AnimationHandlers handlers = {
+        //The reference to the stopped handler is the only one in the array
+        .stopped = (AnimationStoppedHandler) on_animation_stopped
+    };
+    animation_set_handlers((Animation*) anim, handlers, NULL);
+ 
+    //Start animation!
+    animation_schedule((Animation*) anim);
+}
+
+void update_time() {
   time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
 	
-  static char time_buffer[] = "00:00";
-  static char datn_buffer[] = "DD"; // Buffer for date number
-  static char date_buffer[] = "WWW MMM DD"; // Buffer for entire date to display
+  static char time_buffer[] = "00:00"; // Buffer for full time (24h)
+	static char min_buffer[] = "00"; // Buffer for minutes
+  static char date_buffer[] = "WWW DD"; // Buffer for entire date to display
   
+	int hour = tick_time->tm_hour; // Get the current hour
+	
+	if (hour > 12) { // Convert to 12h time if needed
+		hour = hour - 12;
+	} else if (hour == 0) { // Show midnight as 12
+		hour = 12;
+	}
+	
   if(clock_is_24h_style() == true) {
-    strftime(time_buffer, sizeof("00:00"), "%H:%M", tick_time);
+    strftime(time_buffer, sizeof("00:00"), "%H:%M", tick_time); // Display time_buffer if 24h time is selected
   } else {
-    strftime(time_buffer, sizeof("00:00"), "%I:%M", tick_time);
+    strftime(min_buffer, sizeof(min_buffer), "%M", tick_time); // Grab the minute from strftime
+		snprintf(time_buffer, sizeof(time_buffer), "%d:%s", hour, min_buffer); // Combine our interger hour and strftime min
   }
 	
-	text_layer_set_text(time_layer, time_buffer);
+	text_layer_set_text(time_layer, time_buffer); // Display the time info
 
-	strftime(datn_buffer, sizeof("DD"), "%e", tick_time); // Write current date to buffer
+	int day = tick_time->tm_mday;
 	int weekday = tick_time->tm_wday; // Get current weekday as an integer (0 is Sunday)
 	
 	// Select the correct strings from languages.c and write to buffer along with date
-	snprintf(date_buffer, sizeof(date_buffer), "%s %s", dayNames[lang][weekday], datn_buffer);
-
+	snprintf(date_buffer, sizeof(date_buffer), "%s %d", dayNames[lang][weekday], day);
+	
 	text_layer_set_text(date_layer, date_buffer); // Display the date info
+}
+
+static void init_animations() {
+	// Move things all fancy like
+	GRect bounds = layer_get_bounds(window_get_root_layer(main_window));
+	GSize time_size = text_layer_get_content_size(time_layer);
+	GSize date_size = text_layer_get_content_size(date_layer);
+	
+	GRect timestart = GRect(0 - time_size.w, PBL_IF_ROUND_ELSE(20, 0), time_size.w, time_size.h);
+	GRect timeend = GRect(PBL_IF_ROUND_ELSE(27, 7), PBL_IF_ROUND_ELSE(20, 0), time_size.w, time_size.h);
+	
+	GRect datestart = GRect(0 - time_size.w, PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h);
+	GRect dateend = GRect(PBL_IF_ROUND_ELSE(29, 9), PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h);
+	
+	GRect diagstart = GRect(200, 200, bounds.size.w, bounds.size.h);
+	GRect diagend = GRect(0, 0, bounds.size.w, bounds.size.h);
+	
+	GRect horzstart = GRect(0, 200, bounds.size.w, bounds.size.h);
+	GRect horzend = GRect(0, 0, bounds.size.w, bounds.size.h);
+	
+	animate_layer(text_layer_get_layer(time_layer), &timestart, &timeend, 500, 0);
+	animate_layer(text_layer_get_layer(date_layer), &datestart, &dateend, 500, 100);
+	
+	animate_layer(diag_rect_layer, &diagstart, &diagend, 500, 0);
+	animate_layer(horz_rect_layer, &horzstart, &horzend, 500, 0);
+	
+	update_time();
 }
 
 static void batt_handler(BatteryChargeState state) {
@@ -110,6 +177,7 @@ static void batt_handler(BatteryChargeState state) {
 	}
 	
 	layer_mark_dirty(batt_layer);
+
 }
 
 static void bt_handler(bool connected) {
@@ -118,11 +186,14 @@ static void bt_handler(bool connected) {
 	}
 	
 	if (connected) {
-		vibes_long_pulse();
-		bt_icon = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CONNECTED);
+		if (vibe_on_connect == 1) {
+			vibes_double_pulse();
+		}
+		
 	} else {
-		vibes_double_pulse();
-		bt_icon = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DISCONNECTED);
+		if (vibe_on_disconnect == 1) {
+			vibes_long_pulse();
+		}
 	}
 	
 	layer_mark_dirty(bt_layer);
@@ -141,65 +212,172 @@ static void setup_rects(void) {
 	gpath_move_to(diag_drop, GPoint(-40, 90));
 }
 
+void pick_colours() {
+	if (colourscheme == 0) { // Classic
+		horz = GColorFromRGB(255, 167, 38);
+		horzdrop = GColorFromRGB(245, 124, 0);
+		diag = GColorFromRGB(33, 150, 243);
+		diagdrop = GColorFromRGB(13, 71, 161);
+		text_layer_set_text_color(time_layer, GColorBlack);
+		text_layer_set_text_color(date_layer, GColorBlack);
+		text_layer_set_text_color(temp_layer, GColorBlack);
+		window_set_background_color(main_window, GColorFromRGB(38, 166, 154));
+		//usewhiteicons = 0;
+	} else if (colourscheme == 1) { // Vault-ish (Yellow, green, purple)
+		horz = GColorFromRGB(255, 255, 170);
+		horzdrop = GColorFromRGB(255, 196, 0);
+		diag = GColorFromRGB(170, 255, 85);
+		diagdrop = GColorFromRGB(85, 255, 0);
+		text_layer_set_text_color(time_layer, GColorWhite);
+		text_layer_set_text_color(date_layer, GColorWhite);
+		text_layer_set_text_color(temp_layer, GColorBlack);
+		window_set_background_color(main_window, GColorFromRGB(170, 85, 255));
+		//usewhiteicons = 1;
+	} else if (colourscheme == 2) { // Unnamed (Red, yellow/green, blue)
+		horz = GColorFromRGB(255, 82, 82);
+		horzdrop = GColorFromRGB(198, 40, 40);
+		diag = GColorFromRGB(156, 204, 101);
+		diagdrop = GColorFromRGB(104, 159, 56);
+		text_layer_set_text_color(time_layer, GColorWhite);
+		text_layer_set_text_color(date_layer, GColorWhite);
+		text_layer_set_text_color(temp_layer, GColorBlack);
+		window_set_background_color(main_window, GColorFromRGB(0, 151, 167));
+	} else if (colourscheme == 3) { // Unnamed 2 (Purple, blue, yellow)
+		horz = GColorFromRGB(170, 85, 170);
+		horzdrop = GColorFromRGB(170, 0, 170);
+		diag = GColorFromRGB(0, 170, 170);
+		diagdrop = GColorFromRGB(0, 85, 170);
+		text_layer_set_text_color(time_layer, GColorBlack);
+		text_layer_set_text_color(date_layer, GColorBlack);
+		text_layer_set_text_color(temp_layer, GColorBlack);
+		window_set_background_color(main_window, GColorFromRGB(255, 255, 170));
+	} else if (colourscheme == 4) { // Unnamed 3 (Blue, green, red)
+		horz = GColorFromRGB(85, 255, 170);
+		horzdrop = GColorFromRGB(0, 255, 255);
+		diag = GColorFromRGB(170, 255, 0);
+		diagdrop = GColorFromRGB(85, 255, 0);
+		text_layer_set_text_color(time_layer, GColorWhite);
+		text_layer_set_text_color(date_layer, GColorWhite);
+		text_layer_set_text_color(temp_layer, GColorBlack);
+		window_set_background_color(main_window, GColorFromRGB(255, 85, 85));
+	} else if (colourscheme == 5) { // Unnamed 4 (Orange, gree, blue)
+		horz = GColorFromRGB(255, 170, 85);
+		horzdrop = GColorFromRGB(255, 170, 0);
+		diag = GColorFromRGB(170, 255, 0);
+		diagdrop = GColorFromRGB(85, 255, 0);
+		text_layer_set_text_color(time_layer, GColorWhite);
+		text_layer_set_text_color(date_layer, GColorWhite);
+		text_layer_set_text_color(temp_layer, GColorBlack);
+		window_set_background_color(main_window, GColorFromRGB(0, 85, 170));
+	} else { // Classic
+		horz = GColorFromRGB(255, 167, 38);
+		horzdrop = GColorFromRGB(245, 124, 0);
+		diag = GColorFromRGB(33, 150, 243);
+		diagdrop = GColorFromRGB(13, 71, 161);
+		text_layer_set_text_color(time_layer, GColorWhite);
+		text_layer_set_text_color(date_layer, GColorWhite);
+		text_layer_set_text_color(temp_layer, GColorWhite);
+		window_set_background_color(main_window, GColorFromRGB(38, 166, 154));
+	}
+	
+	layer_mark_dirty(batt_layer);
+	layer_mark_dirty(bt_layer);
+}
+
 static void draw_horz_rect(Layer *layer, GContext *ctx) {
 	graphics_context_set_antialiased(ctx, true);
 	
-	graphics_context_set_fill_color(ctx, GColorFromRGB(245, 124, 0));
+	/*if (colourscheme == 0) {
+		graphics_context_set_fill_color(ctx, GColorFromRGB(245, 124, 0));
+		gpath_draw_filled(ctx, horz_drop);
+
+		graphics_context_set_fill_color(ctx, GColorFromRGB(255, 167, 38));
+		gpath_draw_filled(ctx, horz_rect);
+
+		graphics_context_set_stroke_color(ctx, GColorFromRGB(245, 124, 0));
+		gpath_draw_outline(ctx, horz_rect);
+	} else if (colourscheme == 1) {
+		graphics_context_set_fill_color(ctx, GColorFromRGB(255, 196, 0));
+		gpath_draw_filled(ctx, horz_drop);
+
+		graphics_context_set_fill_color(ctx, GColorFromRGB(255, 255, 170));
+		gpath_draw_filled(ctx, horz_rect);
+
+		graphics_context_set_stroke_color(ctx, GColorFromRGB(255, 196, 0));
+		gpath_draw_outline(ctx, horz_rect);
+	}*/
+	
+	graphics_context_set_fill_color(ctx, horzdrop);
 	gpath_draw_filled(ctx, horz_drop);
-	
-	graphics_context_set_fill_color(ctx, GColorFromRGB(255, 167, 38));
+
+	graphics_context_set_fill_color(ctx, horz);
 	gpath_draw_filled(ctx, horz_rect);
-	
-	graphics_context_set_stroke_color(ctx, GColorFromRGB(245, 124, 0));
+
+	graphics_context_set_stroke_color(ctx, horzdrop);
 	gpath_draw_outline(ctx, horz_rect);
 }
 
 static void draw_diag_rect(Layer *layer, GContext *ctx) {
 	graphics_context_set_antialiased(ctx, true);
 	
-	graphics_context_set_fill_color(ctx, GColorFromRGB(13, 71, 161));
+	/*if (colourscheme == 0) {
+		graphics_context_set_fill_color(ctx, GColorFromRGB(13, 71, 161));
+		gpath_draw_filled(ctx, diag_drop);
+
+		graphics_context_set_fill_color(ctx, GColorFromRGB(33, 150, 243));
+		gpath_draw_filled(ctx, diag_rect);
+
+		graphics_context_set_stroke_color(ctx, GColorFromRGB(13, 71, 161));
+		gpath_draw_outline(ctx, diag_rect);
+	} else if (colourscheme == 1) {
+		graphics_context_set_fill_color(ctx, GColorFromRGB(13, 71, 161));
+		gpath_draw_filled(ctx, diag_drop);
+
+		graphics_context_set_fill_color(ctx, GColorFromRGB(25, 118, 210));
+		gpath_draw_filled(ctx, diag_rect);
+
+		graphics_context_set_stroke_color(ctx, GColorFromRGB(13, 71, 161));
+		gpath_draw_outline(ctx, diag_rect);
+	}*/
+	
+	graphics_context_set_fill_color(ctx, diagdrop);
 	gpath_draw_filled(ctx, diag_drop);
-	
-	graphics_context_set_fill_color(ctx, GColorFromRGB(33, 150, 243));
+
+	graphics_context_set_fill_color(ctx, diag);
 	gpath_draw_filled(ctx, diag_rect);
-	
-	graphics_context_set_stroke_color(ctx, GColorFromRGB(13, 71, 161));
+
+	graphics_context_set_stroke_color(ctx, diagdrop);
 	gpath_draw_outline(ctx, diag_rect);
 }
 
 static void draw_batt(Layer *layer, GContext *ctx) {
 	APP_LOG(APP_LOG_LEVEL_INFO, "Drawing battery icon");
-	graphics_context_set_compositing_mode(ctx, GCompOpSet);	
+	graphics_context_set_compositing_mode(ctx, GCompOpSet);
+	replace_gbitmap_color(GColorBlack, gcolor_legible_over(horz), batt_icon, NULL); // Pick white or black for icon based on colour scheme
 	graphics_draw_bitmap_in_rect(ctx, batt_icon, layer_get_bounds(batt_layer));
 }
 
 static void draw_bt(Layer *layer, GContext *ctx) {
 	APP_LOG(APP_LOG_LEVEL_INFO, "Drawing BT icon");
-	graphics_context_set_compositing_mode(ctx, GCompOpSet);	
+	graphics_context_set_compositing_mode(ctx, GCompOpSet);
+	bt_icon = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CONNECTED);
+	replace_gbitmap_color(GColorBlack, gcolor_legible_over(horz), bt_icon, NULL);
 	graphics_draw_bitmap_in_rect(ctx, bt_icon, layer_get_bounds(bt_layer));
 }
 
 static void draw_weathericon(Layer *layer, GContext *ctx) {
 	APP_LOG(APP_LOG_LEVEL_INFO, "Drawing weather icon");
-	graphics_context_set_compositing_mode(ctx, GCompOpSet);	
+	graphics_context_set_compositing_mode(ctx, GCompOpSet);
+	replace_gbitmap_color(GColorBlack, gcolor_legible_over(diag), weather_icon, weathericon_layer);
 	graphics_draw_bitmap_in_rect(ctx, weather_icon, layer_get_bounds(weathericon_layer));
 }
 
-static void weather_ended() {
-	APP_LOG(APP_LOG_LEVEL_INFO, "Weather timer ended");
+static void ready_ended() {
+	// Is JS does not init fast enough show the error icon
+	APP_LOG(APP_LOG_LEVEL_INFO, "Ready timer ended");
 	
-	/*if (weather_icon) {
-		APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in weather_ended");
-		gbitmap_destroy(weather_icon);
-	}*/
-	
-	/*if (updated == false) {
-		APP_LOG(APP_LOG_LEVEL_INFO, "Updated is false");
-		weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ERROR);
-		layer_mark_dirty(weathericon_layer);
-	}*/
-	
-	if (weather_timeout != NULL) {
+	if (ready_timeout != NULL) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "Ready timer is not NULL");
 		weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ERROR);
 		layer_mark_dirty(weathericon_layer);
 	}
@@ -210,41 +388,41 @@ static void main_window_load(Window *window) {
 	
 	GRect bounds = layer_get_bounds(window_get_root_layer(window));
 	
-	// Set up window & shapes
-	window_set_background_color(window, GColorFromRGB(38, 166, 154));
-	
-	diag_rect_layer = layer_create(GRect(0, 0, bounds.size.w, bounds.size.h));
+	// Set up shapes
+	diag_rect_layer = layer_create(GRect(200, 200, bounds.size.w, bounds.size.h));
 	layer_set_update_proc(diag_rect_layer, draw_diag_rect);
 	
-	horz_rect_layer = layer_create(GRect(0, 0, bounds.size.w, bounds.size.h));
+	horz_rect_layer = layer_create(GRect(-200, 0, bounds.size.w, bounds.size.h));
 	layer_set_update_proc(horz_rect_layer, draw_horz_rect);
 
 	layer_add_child(window_get_root_layer(window), diag_rect_layer);
 	layer_add_child(window_get_root_layer(window), horz_rect_layer);
 	
-	// Set up time & date
-	
+	// Set up time & date (Commented frames are final positions)
 	time_layer = text_layer_create(GRect(2, 0, bounds.size.w, bounds.size.h));
+	//text_layer_set_text_color(time_layer, GColorWhite);
 	text_layer_set_background_color(time_layer, GColorClear);
+	time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_BLACK_42));
 	text_layer_set_font(time_layer, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
 	text_layer_set_text(time_layer, "00:00");
 	GSize time_size = text_layer_get_content_size(time_layer);
-	layer_set_frame(text_layer_get_layer(time_layer), GRect(PBL_IF_ROUND_ELSE(27, 7), PBL_IF_ROUND_ELSE(20, 0), time_size.w, time_size.h));
+	//layer_set_frame(text_layer_get_layer(time_layer), GRect(PBL_IF_ROUND_ELSE(27, 7), PBL_IF_ROUND_ELSE(20, 0), time_size.w, time_size.h));
+	layer_set_frame(text_layer_get_layer(time_layer), GRect(0 - time_size.w, PBL_IF_ROUND_ELSE(20, 0), time_size.w, time_size.h));
 	
 	date_layer = text_layer_create(GRect(2, time_size.h + 3, bounds.size.w, bounds.size.h));
+	//text_layer_set_text_color(date_layer, GColorWhite);
 	text_layer_set_background_color(date_layer, GColorClear);
+	date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_24));
 	text_layer_set_font(date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
 	text_layer_set_text(date_layer, "MON 01");
 	GSize date_size = text_layer_get_content_size(date_layer);
-	layer_set_frame(text_layer_get_layer(date_layer), GRect(PBL_IF_ROUND_ELSE(29, 9), PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h));
+	//layer_set_frame(text_layer_get_layer(date_layer), GRect(PBL_IF_ROUND_ELSE(29, 9), PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h));
+	layer_set_frame(text_layer_get_layer(date_layer), GRect(0 - time_size.w, PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h));
 	
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(time_layer));
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
 	
-	update_time();
-	
 	// Set up battery & BT icons
-	
 	batt_layer = layer_create(GRect(PBL_IF_ROUND_ELSE(30, 5), 125, 14, 26));
 	layer_set_update_proc(batt_layer, draw_batt);
 	
@@ -265,21 +443,58 @@ static void main_window_load(Window *window) {
 	layer_add_child(horz_rect_layer, bt_layer);
 	
 	// Set up weather layers
-	
-	weathericon_layer = layer_create(GRect(PBL_IF_ROUND_ELSE(152, 122), 73, 20, 23));
+	weathericon_layer = layer_create(GRect(PBL_IF_ROUND_ELSE(160, 122), 73, 20, 23));
 	layer_set_update_proc(weathericon_layer, draw_weathericon);
-	weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING);
 	
-	temp_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(130, 121), 75, 144, 168));
+	
+	//temp_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(130, 121), 75, 144, 168));
+	#ifdef PBL_ROUND 
+		temp_layer = text_layer_create(GRect(125, 95, 40, 25));
+	#else
+		temp_layer = text_layer_create(GRect(104, 95, 40, 25));
+	#endif
+	text_layer_set_text_color(temp_layer, gcolor_legible_over(diag));
 	text_layer_set_background_color(temp_layer, GColorClear);
+	text_layer_set_text_alignment(temp_layer, GTextAlignmentCenter);
 	text_layer_set_font(temp_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
-	
 	
 	layer_add_child(diag_rect_layer, weathericon_layer);
 	layer_add_child(diag_rect_layer, text_layer_get_layer(temp_layer));
+	
+	// Check for existing keys
+	if (persist_exists(KEY_LANG)) {
+		lang = persist_read_int(KEY_LANG);
+	}
+	
+	if (persist_exists(KEY_USECELSIUS)) {
+		use_celsius = persist_read_int(KEY_USECELSIUS);
+	}
+	
+	if (persist_exists(KEY_SHOW_WEATHER)) {
+		show_weather = persist_read_int(KEY_SHOW_WEATHER);
+	}
+	
+	if (show_weather == 0) {
+		layer_set_hidden(text_layer_get_layer(temp_layer), true);
+		layer_set_hidden(weathericon_layer, true);
+	} else {
+		layer_set_hidden(text_layer_get_layer(temp_layer), false);
+		layer_set_hidden(weathericon_layer, false);
+	}
+	
+	if (persist_exists(KEY_COLOUR_SCHEME)) {
+		colourscheme = persist_read_int(KEY_COLOUR_SCHEME);
+		//colourscheme = testscheme;
+	} else {
+		//colourscheme = testscheme;
+	}
+	
+	pick_colours(); // Pick the proper colour scheme
+	weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING);
 }
 
 static void main_window_unload(Window *window) {
+	// http://bit.ly/1ZvbJIb
 	layer_destroy(horz_rect_layer);
 	layer_destroy(diag_rect_layer);
 	layer_destroy(batt_layer);
@@ -290,7 +505,6 @@ static void main_window_unload(Window *window) {
 	text_layer_destroy(temp_layer);
 	gbitmap_destroy(batt_icon);
 	gbitmap_destroy(bt_icon);
-	APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in main_window_unload");
 	gbitmap_destroy(weather_icon);
 	gpath_destroy(horz_rect);
 	gpath_destroy(diag_rect);
@@ -298,168 +512,17 @@ static void main_window_unload(Window *window) {
 	gpath_destroy(diag_drop);
 }
 
-static void inbox_received_handler(DictionaryIterator *iter, void *context) {
-	static char temp_buffer[5];
-	static char tempc_buffer [5];
-	
-	Tuple *ready_t = dict_find(iter, KEY_READY); // cstring
-	Tuple *temp_t = dict_find(iter, KEY_TEMP); // int32
-	Tuple *tempc_t = dict_find(iter, KEY_TEMPC); // int32
-	Tuple *id_t = dict_find(iter, KEY_WEATHERID); // int32
-	
-	if (ready_t) {
-		int status = (int)ready_t->value->int32;
-		APP_LOG(APP_LOG_LEVEL_INFO, "Ready status is %d", status);
-		
-		APP_LOG(APP_LOG_LEVEL_INFO, "Starting weather_timeout...");
-		weather_timeout = app_timer_register(10000, weather_ended, NULL);
-		
-		if (status == 0) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "JS reports ready!");
-
-			// Begin dictionary
-			DictionaryIterator *iter;
-			app_message_outbox_begin(&iter);
-
-			// Add a key-value pair
-			dict_write_uint8(iter, 3, 0);
-
-			// Send the message!
-			/*APP_LOG(APP_LOG_LEVEL_INFO, "Setting updated to false in ready_t");
-			updated = false;*/
-			app_message_outbox_send();
-			APP_LOG(APP_LOG_LEVEL_INFO, "Requested weather, starting weather_timeout...");
-			weather_timeout = app_timer_register(10000, weather_ended, NULL);
-		}
-	}
-	
-	if (temp_t) {
-		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_TEMP received");
-		
-		if (weather_timeout != NULL) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
-			app_timer_cancel(weather_timeout);
-			weather_timeout = NULL;
-		}
-		
-		snprintf(temp_buffer, sizeof(temp_buffer), "%d°", (int)temp_t->value->int32);
-	}
-	
-	if (tempc_t) {
-		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_TEMPC received");
-		
-		if (weather_timeout != NULL) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
-			app_timer_cancel(weather_timeout);
-			weather_timeout = NULL;
-		}
-		
-		snprintf(tempc_buffer, sizeof(tempc_buffer), "%d°", (int)tempc_t->value->int32);
-		text_layer_set_text(temp_layer, tempc_buffer);
-		
-		GRect bounds = layer_get_bounds(window_get_root_layer(main_window));
-		GSize temp_size = text_layer_get_content_size(temp_layer);
-		layer_set_frame(text_layer_get_layer(temp_layer), GRect(PBL_IF_ROUND_ELSE(131, 110), 95, temp_size.w, temp_size.h));
-	}
-	
-	if (id_t) {
-		APP_LOG(APP_LOG_LEVEL_INFO, "Weather ID is %d", (int)id_t->value->int32);
-		//APP_LOG(APP_LOG_LEVEL_INFO, "Setting updated to true");
-		//updated = true;
-		
-		if (weather_timeout != NULL) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling weather timer");
-			app_timer_cancel(weather_timeout);
-			weather_timeout = NULL;
-		}
-		
-		int weatherid = (int)id_t->value->int32;
-		
-		/*if (weather_icon) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in inbox");
-			gbitmap_destroy(weather_icon);
-		}*/
-		
-		time_t temp = time(NULL);
-		struct tm *tick_time = localtime(&temp);
-		int hour = tick_time->tm_hour;
-		
-		if ((weatherid % 900) < 100) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Picking 900");
-			weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[0]);
-		} else if ((weatherid % 801) == 0) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Picking 801");
-			if (hour >= 18) { // If it's past 6PM, display the night variant (clear sky moon)
-				weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[9]);
-			} else { // Display the day varient (clear sky sun)
-				weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[5]);
-			}
-		} else if ((weatherid % 800) == 0) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Picking 800 exactly");
-			if (hour >= 18) { // If it's past 6PM, display the night variant (clear sky moon)
-				weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[6]);
-			} else { // Display the day varient (clear sky sun)
-				weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[2]);
-			}
-		} else if ((weatherid % 800) < 100) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Picking 800");
-			weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[8]);
-		} else if ((weatherid % 700) < 100) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Picking 700");
-			weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[7]);
-		} else if ((weatherid % 600) < 100) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Picking 600");
-			weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[3]);
-		} else if ((weatherid % 500) < 100) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Picking 500");
-			weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[4]);
-		} else if ((weatherid % 200) < 100) {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Picking 200");
-			weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[1]);
-		} else {
-			APP_LOG(APP_LOG_LEVEL_INFO, "Picking default");
-			weather_icon = gbitmap_create_with_resource(WEATHER_ICONS[0]);
-		}
-		
-		layer_mark_dirty(weathericon_layer);
-	}
-}
-
-static void inbox_dropped_callback(AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped");
-}
-
-static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed");
-}
-
-static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
-}
-
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 	update_time();
 	
 	if(tick_time->tm_min % 30 == 0) {
-			/*if (weather_icon) {
+			if (weather_icon != NULL) {
 				APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in tick_handler");
 				gbitmap_destroy(weather_icon);
-			}*/
-			weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING);
-			layer_mark_dirty(weathericon_layer);
-			// Begin dictionary
-			DictionaryIterator *iter;
-			app_message_outbox_begin(&iter);
-
-			// Add a key-value pair
-			dict_write_uint8(iter, 3, 0);
-
-			// Send the message!
-			APP_LOG(APP_LOG_LEVEL_INFO, "Setting updated to false in tick_handler");
-			updated = false;
-			app_message_outbox_send();
-			APP_LOG(APP_LOG_LEVEL_INFO, "Requested weather update, starting weather_timeout...");
-			weather_timeout = app_timer_register(10000, weather_ended, NULL);
+			}
+			if (show_weather == 1) {
+				update_weather();
+			}
 	}
 }
 
@@ -473,18 +536,15 @@ static void init() {
 
   window_stack_push(main_window, true);
 	
+	APP_LOG(APP_LOG_LEVEL_INFO, "Waiting for ready signal from JS, starting ready_timeout...");
+	ready_timeout = app_timer_register(timeout, ready_ended, NULL);
+	
 	tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
 	battery_state_service_subscribe(batt_handler);
 	bluetooth_connection_service_subscribe(bt_handler);
 	
-	app_message_register_inbox_received(inbox_received_handler);
-	app_message_register_inbox_dropped(inbox_dropped_callback);
-	app_message_register_outbox_failed(outbox_failed_callback);
-	app_message_register_outbox_sent(outbox_sent_callback);
-	
-	int buffer_in = dict_calc_buffer_size(4, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t));
-	int buffer_out = dict_calc_buffer_size(1, sizeof(int32_t));
-	app_message_open(buffer_in, buffer_out);
+	init_appmessage(); // Start appmessaging in messaging.c
+	init_animations(); // I like to move it move it
 }
 
 static void deinit() {
