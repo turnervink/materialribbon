@@ -253,7 +253,7 @@ void pick_colours() {
 		text_layer_set_text_color(temp_layer, GColorBlack);
 		window_set_background_color(main_window, GColorFromRGB(38, 166, 154));
 		usewhiteicons = 0;
-	} else if (colourscheme == 1) { // Vault-ish (Yellow, green, purple)
+	} else if (colourscheme == 1) { // Pop Tart (Yellow, green, purple)
 		horz = GColorFromRGB(255, 255, 170);
 		horzdrop = GColorFromRGB(255, 196, 0);
 		diag = GColorFromRGB(170, 255, 85);
@@ -263,17 +263,17 @@ void pick_colours() {
 		text_layer_set_text_color(temp_layer, GColorBlack);
 		window_set_background_color(main_window, GColorFromRGB(170, 85, 255));
 		usewhiteicons = 0;
-	} else if (colourscheme == 2) { // Unnamed (Red, yellow/green, blue)
-		horz = GColorFromRGB(255, 82, 82);
-		horzdrop = GColorFromRGB(198, 40, 40);
-		diag = GColorFromRGB(156, 204, 101);
-		diagdrop = GColorFromRGB(104, 159, 56);
-		text_layer_set_text_color(time_layer, GColorWhite);
-		text_layer_set_text_color(date_layer, GColorWhite);
+	} else if (colourscheme == 2) { // Lemon Splash (Yellow, yellow, black)
+		horz = GColorFromRGB(255, 255, 0);
+		horzdrop = GColorFromRGB(170, 170, 0);
+		diag = GColorFromRGB(255, 255, 0);
+		diagdrop = GColorFromRGB(170, 170, 0);
+		text_layer_set_text_color(time_layer, GColorYellow);
+		text_layer_set_text_color(date_layer, GColorYellow);
 		text_layer_set_text_color(temp_layer, GColorBlack);
-		window_set_background_color(main_window, GColorFromRGB(0, 151, 167));
+		window_set_background_color(main_window, GColorFromRGB(0, 0, 0));
 		usewhiteicons = 0;
-	} else if (colourscheme == 3) { // Unnamed 2 (Purple, blue, yellow)
+	} else if (colourscheme == 3) { // Frozen Yoghurt (Purple, blue, yellow)
 		horz = GColorFromRGB(170, 85, 170);
 		horzdrop = GColorFromRGB(170, 0, 170);
 		diag = GColorFromRGB(0, 170, 170);
@@ -283,7 +283,7 @@ void pick_colours() {
 		text_layer_set_text_color(temp_layer, GColorBlack);
 		window_set_background_color(main_window, GColorFromRGB(255, 255, 170));
 		usewhiteicons = 1;
-	} else if (colourscheme == 4) { // Unnamed 3 (Blue, green, red)
+	} else if (colourscheme == 4) { // Watermelon (Blue, green, red)
 		horz = GColorFromRGB(85, 255, 170);
 		horzdrop = GColorFromRGB(0, 255, 255);
 		diag = GColorFromRGB(170, 255, 0);
@@ -293,7 +293,7 @@ void pick_colours() {
 		text_layer_set_text_color(temp_layer, GColorBlack);
 		window_set_background_color(main_window, GColorFromRGB(255, 85, 85));
 		usewhiteicons = 0;
-	} else if (colourscheme == 5) { // Unnamed 4 (Orange, gree, blue)
+	} else if (colourscheme == 5) { // Popsicle (Orange, green, blue)
 		horz = GColorFromRGB(255, 170, 85);
 		horzdrop = GColorFromRGB(255, 170, 0);
 		diag = GColorFromRGB(170, 255, 0);
@@ -396,7 +396,12 @@ static void draw_batt(Layer *layer, GContext *ctx) {
 static void draw_bt(Layer *layer, GContext *ctx) {
 	APP_LOG(APP_LOG_LEVEL_INFO, "Drawing BT icon");
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
-	bt_icon = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CONNECTED);
+	//bt_icon = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CONNECTED);
+	if (bluetooth_connection_service_peek()) {
+		bt_icon = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CONNECTED);
+	} else {
+		bt_icon = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DISCONNECTED);
+	}
 	replace_gbitmap_color(GColorBlack, gcolor_legible_over(horz), bt_icon, NULL);
 	graphics_draw_bitmap_in_rect(ctx, bt_icon, layer_get_bounds(bt_layer));
 }
