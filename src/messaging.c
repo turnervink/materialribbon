@@ -34,7 +34,7 @@ static void weather_ended() {
 	
 	if (weather_timeout != NULL) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "Weather timer is not NULL");
-		weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ERROR);
+		//weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ERROR);
 		layer_mark_dirty(weathericon_layer);
 		text_layer_set_text(temp_layer, " ");
 	}

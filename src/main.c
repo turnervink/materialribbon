@@ -157,6 +157,7 @@ static void batt_handler(BatteryChargeState state) {
 	bool charging = state.is_charging;
 	
 	if (batt_sprites) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "Destroying batt_sprites in batt_handler");
 		gbitmap_destroy(batt_sprites);
 	}
 	
@@ -169,6 +170,7 @@ static void batt_handler(BatteryChargeState state) {
 	}
 	
 	if (batt_icon) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "Destroying batT_icon in batt_handler");
 		gbitmap_destroy(batt_icon);
 	}
 	
@@ -209,6 +211,7 @@ static void batt_handler(BatteryChargeState state) {
 
 static void bt_handler(bool connected) {
 	if (bt_icon) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "Destroying bt_icon in bt_handler");
 		gbitmap_destroy(bt_icon);
 	}
 	
