@@ -96,7 +96,7 @@ void update_time() {
 	
   static char time_buffer[] = "00:00"; // Buffer for full time (24h)
 	static char min_buffer[] = "00"; // Buffer for minutes
-  static char date_buffer[] = "WWW DD"; // Buffer for entire date to display
+  static char date_buffer[15]; // Buffer for entire date to display
   
 	int hour = tick_time->tm_hour; // Get the current hour
 	

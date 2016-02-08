@@ -240,7 +240,16 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
   	} else if (strcmp(lang_tup->value->cstring, "de") == 0){
   		APP_LOG(APP_LOG_LEVEL_INFO, "Using German");
   		lang = 3;
-  	} else {
+		} else if (strcmp(lang_tup->value->cstring, "ru") == 0) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Using Russian");
+  		lang = 4;
+		} else if (strcmp(lang_tup->value->cstring, "it") == 0) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Using Russian");
+  		lang = 5;
+		} else if (strcmp(lang_tup->value->cstring, "po") == 0) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Using Russian");
+  		lang = 6;
+		} else {
   		lang = 0;
   	}
 		
