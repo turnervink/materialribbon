@@ -22,6 +22,18 @@
     "resources": {
         "media": [
             {
+                "file": "images/batteryspriteswhite.png",
+                "name": "IMAGE_BATT_SPRITES_WHITE",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/batterysprites.png",
+                "name": "IMAGE_BATT_SPRITES",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
                 "file": "fonts/Roboto-Black.ttf",
                 "name": "FONT_ROBOTO_BLACK_42",
                 "targetPlatforms": null,
@@ -48,12 +60,6 @@
             {
                 "file": "images/60.png",
                 "name": "BATT_60",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/80.png",
-                "name": "BATT_80",
                 "targetPlatforms": null,
                 "type": "bitmap"
             },

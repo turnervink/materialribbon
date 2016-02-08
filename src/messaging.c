@@ -83,20 +83,20 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	static char temp_buffer[10];
 	static char tempc_buffer[10];
 	
-	Tuple *ready_t = dict_find(iter, KEY_READY); // cstring
-	Tuple *temp_t = dict_find(iter, KEY_TEMP); // int32
-	Tuple *tempc_t = dict_find(iter, KEY_TEMPC); // int32
-	Tuple *id_t = dict_find(iter, KEY_WEATHERID); // int32
+	Tuple *ready_tup = dict_find(iter, KEY_READY); // cstring
+	Tuple *temp_tup = dict_find(iter, KEY_TEMP); // int32
+	Tuple *tempc_tup = dict_find(iter, KEY_TEMPC); // int32
+	Tuple *id_tup = dict_find(iter, KEY_WEATHERID); // int32
 	
-	Tuple *lang_t = dict_find(iter, KEY_LANG); // cstring
-	Tuple *usecelsius_t = dict_find(iter, KEY_USECELSIUS); // int8
-	Tuple *showweather_t = dict_find(iter, KEY_SHOW_WEATHER); //int8
-	Tuple *vibeconnect_t = dict_find(iter, KEY_VIBE_ON_CONNECT); // int8
-	Tuple *vibedisconnect_t = dict_find(iter, KEY_VIBE_ON_DISCONNECT); // int8
-	Tuple *colourscheme_t = dict_find(iter, KEY_COLOUR_SCHEME); // int32
+	Tuple *lang_tup = dict_find(iter, KEY_LANG); // cstring
+	Tuple *usecelsius_tup = dict_find(iter, KEY_USECELSIUS); // int8
+	Tuple *showweather_tup = dict_find(iter, KEY_SHOW_WEATHER); //int8
+	Tuple *vibeconnect_tup = dict_find(iter, KEY_VIBE_ON_CONNECT); // int8
+	Tuple *vibedisconnect_tup = dict_find(iter, KEY_VIBE_ON_DISCONNECT); // int8
+	Tuple *colourscheme_tup = dict_find(iter, KEY_COLOUR_SCHEME); // int32
 	
-	if (ready_t) {
-		int status = (int)ready_t->value->int32;
+	if (ready_tup) {
+		int status = (int)ready_tup->value->int32;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Ready status is %d", status);
 		
 		cancel_ready_timeout();
@@ -109,33 +109,33 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		}
 	}
 	
-	if (temp_t) {
+	if (temp_tup) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_TEMP received");
 		cancel_weather_timeout();
 		
-		snprintf(temp_buffer, sizeof(temp_buffer), "%d°", (int)temp_t->value->int32);
+		snprintf(temp_buffer, sizeof(temp_buffer), "%d°", (int)temp_tup->value->int32);
 	}
 	
-	if (tempc_t) {
+	if (tempc_tup) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_TEMPC received");
 		cancel_weather_timeout();
 		
-		snprintf(tempc_buffer, sizeof(tempc_buffer), "%d°", (int)tempc_t->value->int32);
+		snprintf(tempc_buffer, sizeof(tempc_buffer), "%d°", (int)tempc_tup->value->int32);
 		//snprintf(tempc_buffer, sizeof(tempc_buffer), "1°");
 	}
 	
-	if (usecelsius_t) {
+	if (usecelsius_tup) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_USE_CELSIUS received!");
 
-  	use_celsius = usecelsius_t->value->int8;
+  	use_celsius = usecelsius_tup->value->int8;
 
   	persist_write_int(KEY_USECELSIUS, use_celsius);
 	}	
 	
-	if (showweather_t) {
+	if (showweather_tup) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_SHOW_WEATHER received!");
 		
-		show_weather = showweather_t->value->int8;
+		show_weather = showweather_tup->value->int8;
 		APP_LOG(APP_LOG_LEVEL_INFO, "show_weather: %d", show_weather);
 		
 		persist_write_int(KEY_SHOW_WEATHER, show_weather);
@@ -166,11 +166,11 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		layer_set_hidden(weathericon_layer, false);
 	}
 	
-	if (id_t) {
-		APP_LOG(APP_LOG_LEVEL_INFO, "Weather ID is %d", (int)id_t->value->int32);
+	if (id_tup) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "Weather ID is %d", (int)id_tup->value->int32);
 		cancel_weather_timeout();
 		
-		int weatherid = (int)id_t->value->int32;
+		int weatherid = (int)id_tup->value->int32;
 		//int weatherid = 2; // Hardcoded for testing
 		
 		if (weather_icon != NULL) {
@@ -226,18 +226,18 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		layer_mark_dirty(weathericon_layer);
 	}
 	
-	if (lang_t) {
+	if (lang_tup) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_LANGUAGE received!");
-  	if (strcmp(lang_t->value->cstring, "en") == 0) {
+  	if (strcmp(lang_tup->value->cstring, "en") == 0) {
   		APP_LOG(APP_LOG_LEVEL_INFO, "Using English");
   		lang = 0;
-  	} else if (strcmp(lang_t->value->cstring, "fr") == 0){
+  	} else if (strcmp(lang_tup->value->cstring, "fr") == 0){
   		APP_LOG(APP_LOG_LEVEL_INFO, "Using French");
   		lang = 1;
-  	} else if (strcmp(lang_t->value->cstring, "es") == 0){
+  	} else if (strcmp(lang_tup->value->cstring, "es") == 0){
   		APP_LOG(APP_LOG_LEVEL_INFO, "Using Spanish");
   		lang = 2;
-  	} else if (strcmp(lang_t->value->cstring, "de") == 0){
+  	} else if (strcmp(lang_tup->value->cstring, "de") == 0){
   		APP_LOG(APP_LOG_LEVEL_INFO, "Using German");
   		lang = 3;
   	} else {
@@ -248,23 +248,23 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		update_time();
 	}
 	
-	if (vibeconnect_t) {
+	if (vibeconnect_tup) {
   	APP_LOG(APP_LOG_LEVEL_INFO, "KEY_VIBE_ON_CONNECT received!");
-  	vibe_on_connect = vibeconnect_t->value->int8;
+  	vibe_on_connect = vibeconnect_tup->value->int8;
 		
 		persist_write_int(KEY_VIBE_ON_CONNECT, vibe_on_connect);
   }
 
-  if (vibedisconnect_t) {
+  if (vibedisconnect_tup) {
   	APP_LOG(APP_LOG_LEVEL_INFO, "KEY_VIBE_ON_DISCONNECT received!");
-  	vibe_on_disconnect = vibedisconnect_t->value->int8;
+  	vibe_on_disconnect = vibedisconnect_tup->value->int8;
 		
 		persist_write_int(KEY_VIBE_ON_DISCONNECT, vibe_on_connect);
   }
 	
-	if (colourscheme_t) {
+	if (colourscheme_tup) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_COLOUR_SCHEME received!");
-		colourscheme = colourscheme_t->value->int8;
+		colourscheme = colourscheme_tup->value->int8;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Colour scheme is %d", colourscheme);
 		persist_write_int(KEY_COLOUR_SCHEME, colourscheme);
 		pick_colours();

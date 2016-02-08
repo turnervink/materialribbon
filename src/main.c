@@ -6,7 +6,7 @@
 static Window *main_window;
 static Layer *horz_rect_layer, *diag_rect_layer, *batt_layer, *bt_layer;
 static TextLayer *time_layer, *date_layer;
-static GBitmap *batt_icon, *bt_icon;
+static GBitmap *batt_icon, *bt_icon, *batt_sprites;
 static GFont time_font, date_font;
 
 // Accessible across files:
@@ -26,7 +26,7 @@ bool vibe_on_connect = 0;
 bool vibe_on_disconnect = 1;
 int colourscheme = 0;
 //static int testscheme = 4;
-//static bool usewhiteicons = 0;
+static bool usewhiteicons;
 
 // Colours for schemes of the colour variety
 static GColor horz;
@@ -56,7 +56,7 @@ static const GPathInfo DIAG_DROP_POINTS = {
 	.points = (GPoint []) {{-20, 117}, {-1, 160}, {180, 160}, {180, 117}}
 };
 
-const int BATT_ICONS[] = {
+/*const int BATT_ICONS[] = {
 	RESOURCE_ID_BATT_LOW,			// 0
 	RESOURCE_ID_BATT_20,			// 1
 	RESOURCE_ID_BATT_40,			// 2
@@ -64,7 +64,7 @@ const int BATT_ICONS[] = {
 	RESOURCE_ID_BATT_80,			// 4
 	RESOURCE_ID_BATT_FULL,		// 5
 	RESOURCE_ID_BATT_CHARGING	// 6
-};
+};*/
 
 void on_animation_stopped(Animation *anim, bool finished, void *context) {
     //Free the memory used by the Animation
@@ -156,11 +156,23 @@ static void batt_handler(BatteryChargeState state) {
 	int pct = state.charge_percent;
 	bool charging = state.is_charging;
 	
+	if (batt_sprites) {
+		gbitmap_destroy(batt_sprites);
+	}
+	
+	if (usewhiteicons == 1) { // If white icons are required by the colour scheme, load the correct PNG
+		APP_LOG(APP_LOG_LEVEL_INFO, "Using white icons");
+		batt_sprites = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATT_SPRITES_WHITE);
+	} else {
+		APP_LOG(APP_LOG_LEVEL_INFO, "Using black icons");
+		batt_sprites = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATT_SPRITES);
+	}
+	
 	if (batt_icon) {
 		gbitmap_destroy(batt_icon);
 	}
 	
-	if (charging) {
+	/*if (charging) {
 		batt_icon = gbitmap_create_with_resource(BATT_ICONS[6]);
 	} else if (pct <= 10) {
 		batt_icon = gbitmap_create_with_resource(BATT_ICONS[0]);
@@ -174,10 +186,25 @@ static void batt_handler(BatteryChargeState state) {
 		batt_icon = gbitmap_create_with_resource(BATT_ICONS[4]);
 	} else if (pct <= 100) {
 		batt_icon = gbitmap_create_with_resource(BATT_ICONS[5]);
+	}*/
+	
+	if (charging) {
+		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(70, 0, 14, 26));
+	} else if (pct <= 10) {
+		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(84, 0, 14, 26));
+	} else if (pct <= 20) {
+		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(0, 0, 14, 26));
+	} else if (pct <= 40) {
+		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(14, 0, 14, 26));
+	} else if (pct <= 60) {
+		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(28, 0, 14, 26));
+	} else if (pct <= 80) {
+		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(42, 0, 14, 26));
+	} else if (pct <= 100) {
+		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(56, 0, 14, 26));
 	}
 	
 	layer_mark_dirty(batt_layer);
-
 }
 
 static void bt_handler(bool connected) {
@@ -222,7 +249,7 @@ void pick_colours() {
 		text_layer_set_text_color(date_layer, GColorBlack);
 		text_layer_set_text_color(temp_layer, GColorBlack);
 		window_set_background_color(main_window, GColorFromRGB(38, 166, 154));
-		//usewhiteicons = 0;
+		usewhiteicons = 0;
 	} else if (colourscheme == 1) { // Vault-ish (Yellow, green, purple)
 		horz = GColorFromRGB(255, 255, 170);
 		horzdrop = GColorFromRGB(255, 196, 0);
@@ -232,7 +259,7 @@ void pick_colours() {
 		text_layer_set_text_color(date_layer, GColorWhite);
 		text_layer_set_text_color(temp_layer, GColorBlack);
 		window_set_background_color(main_window, GColorFromRGB(170, 85, 255));
-		//usewhiteicons = 1;
+		usewhiteicons = 0;
 	} else if (colourscheme == 2) { // Unnamed (Red, yellow/green, blue)
 		horz = GColorFromRGB(255, 82, 82);
 		horzdrop = GColorFromRGB(198, 40, 40);
@@ -242,6 +269,7 @@ void pick_colours() {
 		text_layer_set_text_color(date_layer, GColorWhite);
 		text_layer_set_text_color(temp_layer, GColorBlack);
 		window_set_background_color(main_window, GColorFromRGB(0, 151, 167));
+		usewhiteicons = 0;
 	} else if (colourscheme == 3) { // Unnamed 2 (Purple, blue, yellow)
 		horz = GColorFromRGB(170, 85, 170);
 		horzdrop = GColorFromRGB(170, 0, 170);
@@ -251,6 +279,7 @@ void pick_colours() {
 		text_layer_set_text_color(date_layer, GColorBlack);
 		text_layer_set_text_color(temp_layer, GColorBlack);
 		window_set_background_color(main_window, GColorFromRGB(255, 255, 170));
+		usewhiteicons = 1;
 	} else if (colourscheme == 4) { // Unnamed 3 (Blue, green, red)
 		horz = GColorFromRGB(85, 255, 170);
 		horzdrop = GColorFromRGB(0, 255, 255);
@@ -260,6 +289,7 @@ void pick_colours() {
 		text_layer_set_text_color(date_layer, GColorWhite);
 		text_layer_set_text_color(temp_layer, GColorBlack);
 		window_set_background_color(main_window, GColorFromRGB(255, 85, 85));
+		usewhiteicons = 0;
 	} else if (colourscheme == 5) { // Unnamed 4 (Orange, gree, blue)
 		horz = GColorFromRGB(255, 170, 85);
 		horzdrop = GColorFromRGB(255, 170, 0);
@@ -269,6 +299,7 @@ void pick_colours() {
 		text_layer_set_text_color(date_layer, GColorWhite);
 		text_layer_set_text_color(temp_layer, GColorBlack);
 		window_set_background_color(main_window, GColorFromRGB(0, 85, 170));
+		usewhiteicons = 0;
 	} else { // Classic
 		horz = GColorFromRGB(255, 167, 38);
 		horzdrop = GColorFromRGB(245, 124, 0);
@@ -278,10 +309,12 @@ void pick_colours() {
 		text_layer_set_text_color(date_layer, GColorWhite);
 		text_layer_set_text_color(temp_layer, GColorWhite);
 		window_set_background_color(main_window, GColorFromRGB(38, 166, 154));
+		usewhiteicons = 0;
 	}
 	
-	layer_mark_dirty(batt_layer);
 	layer_mark_dirty(bt_layer);
+	//layer_mark_dirty(batt_layer);
+	batt_handler(battery_state_service_peek());
 }
 
 static void draw_horz_rect(Layer *layer, GContext *ctx) {
@@ -353,7 +386,7 @@ static void draw_diag_rect(Layer *layer, GContext *ctx) {
 static void draw_batt(Layer *layer, GContext *ctx) {
 	APP_LOG(APP_LOG_LEVEL_INFO, "Drawing battery icon");
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
-	replace_gbitmap_color(GColorBlack, gcolor_legible_over(horz), batt_icon, NULL); // Pick white or black for icon based on colour scheme
+	//replace_gbitmap_color(GColorBlack, gcolor_legible_over(horz), batt_icon, NULL); // Pick white or black for icon based on colour scheme
 	graphics_draw_bitmap_in_rect(ctx, batt_icon, layer_get_bounds(batt_layer));
 }
 
