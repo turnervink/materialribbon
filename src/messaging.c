@@ -116,6 +116,7 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		cancel_weather_timeout();
 		
 		snprintf(temp_buffer, sizeof(temp_buffer), "%d°", (int)temp_tup->value->int32);
+		//snprintf(tempc_buffer, sizeof(tempc_buffer), "13°");
 	}
 	
 	if (tempc_tup) {
@@ -123,7 +124,7 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		cancel_weather_timeout();
 		
 		snprintf(tempc_buffer, sizeof(tempc_buffer), "%d°", (int)tempc_tup->value->int32);
-		//snprintf(tempc_buffer, sizeof(tempc_buffer), "1°");
+		//snprintf(tempc_buffer, sizeof(tempc_buffer), "13°");
 	}
 	
 	if (usecelsius_tup) {
@@ -148,11 +149,13 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	
 	if (use_celsius == 1) {
 		text_layer_set_text(temp_layer, tempc_buffer);
+		//text_layer_set_text(temp_layer, "13°");
 		//GSize temp_size = text_layer_get_content_size(temp_layer);
 		//APP_LOG(APP_LOG_LEVEL_INFO, "Width is %d", temp_size.w);
 		//layer_set_frame(text_layer_get_layer(temp_layer), GRect(PBL_IF_ROUND_ELSE(145 - (temp_size.w / 2), 123 - (temp_size.w / 2)), 95, 30, 30));
 	} else {
 		text_layer_set_text(temp_layer, temp_buffer);
+		//text_layer_set_text(temp_layer, "13°");
 		//GSize temp_size = text_layer_get_content_size(temp_layer);
 		//APP_LOG(APP_LOG_LEVEL_INFO, "Width is %d", temp_size.w);
 		//layer_set_frame(text_layer_get_layer(temp_layer), GRect(PBL_IF_ROUND_ELSE(145 - (temp_size.w / 2), 123 - (temp_size.w / 2)), 95, 30, 30));
@@ -173,7 +176,7 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		cancel_weather_timeout();
 		
 		int weatherid = (int)id_tup->value->int32;
-		//int weatherid = 2; // Hardcoded for testing
+		//int weatherid = 800; // Hardcoded for testing
 		
 		if (weather_icon != NULL) {
 			APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in inbox");
@@ -182,7 +185,8 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		
 		time_t temp = time(NULL);
 		struct tm *tick_time = localtime(&temp);
-		int hour = tick_time->tm_hour;
+		//int hour = tick_time->tm_hour;
+		int hour = 10;
 		
 		// Pick the right icon
 		if ((weatherid % 900) < 100) {
@@ -251,6 +255,9 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		} else if (strcmp(lang_tup->value->cstring, "po") == 0) {
 			APP_LOG(APP_LOG_LEVEL_INFO, "Using Russian");
   		lang = 6;
+		} else if (strcmp(lang_tup->value->cstring, "uk") == 0) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Using Ukrainian");
+  		lang = 7;
 		} else {
   		lang = 0;
   	}

@@ -105,7 +105,7 @@ Pebble.addEventListener('appmessage',
 //===== Config =====//
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'http://4512fc45.ngrok.io';
+  var url = 'http://db50ec92.ngrok.io';
 
   console.log('Showing configuration page: ' + url);
 
