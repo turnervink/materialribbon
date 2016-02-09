@@ -105,7 +105,7 @@ Pebble.addEventListener('appmessage',
 //===== Config =====//
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'http://31c76720.ngrok.io';
+  var url = 'http://4512fc45.ngrok.io';
 
   console.log('Showing configuration page: ' + url);
 
@@ -127,8 +127,9 @@ Pebble.addEventListener('webviewclosed', function(e) {
       vibeDisconnect: configData.vibeDisconnect ? 1 : 0,
       vibeConnect: configData.vibeConnect ? 1 : 0,
       langSel: configData.langSel,
-			colourScheme: parseInt(configData.colourScheme, 8),
+			colourScheme: parseInt(configData.colourScheme),
 			//colourScheme: 5
+			updateTime: parseInt(configData.updateTime)
     }, function(e) {
       console.log('Send successful!');
 			console.log(e);

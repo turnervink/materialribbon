@@ -17,7 +17,7 @@ Layer *weathericon_layer;
 
 //static int lang = 4; // Hardcoded for testing
 int lang;
-int timeout = 30000;
+int timeout = 60000;
 
 // Config options
 bool use_celsius = 1;
@@ -25,6 +25,7 @@ bool show_weather = 1;
 bool vibe_on_connect = 0;
 bool vibe_on_disconnect = 1;
 int colourscheme = 0;
+int weatherupdatetime = 60;
 //static int testscheme = 4;
 static bool usewhiteicons;
 
@@ -530,6 +531,10 @@ static void main_window_load(Window *window) {
 		//colourscheme = testscheme;
 	}
 	
+	if (persist_exists(KEY_UPDATE_TIME)) {
+		weatherupdatetime = persist_read_int(KEY_UPDATE_TIME);
+	}
+	
 	pick_colours(); // Pick the proper colour scheme
 	weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING);
 }
@@ -556,7 +561,7 @@ static void main_window_unload(Window *window) {
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 	update_time();
 	
-	if(tick_time->tm_min % 30 == 0) {
+	if(tick_time->tm_min % weatherupdatetime == 0) {
 			if (weather_icon != NULL) {
 				APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in tick_handler");
 				gbitmap_destroy(weather_icon);

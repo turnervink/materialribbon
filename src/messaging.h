@@ -11,6 +11,7 @@
 #define KEY_VIBE_ON_DISCONNECT 7
 #define KEY_SHOW_WEATHER 8
 #define KEY_COLOUR_SCHEME 9
+#define KEY_UPDATE_TIME 10
 
 extern AppTimer *weather_timeout, *ready_timeout;
 extern GBitmap *weather_icon;
@@ -21,6 +22,7 @@ extern Layer *weathericon_layer;
 extern int lang;
 extern int timeout;
 extern int colourscheme;
+extern int weatherupdatetime;
 
 // Config options
 extern bool use_celsius;

@@ -23,7 +23,7 @@ void init_appmessage() {
 	app_message_register_outbox_sent(outbox_sent_callback);
 	
 	// Create buffers based on what we are sending/receiving
-	int buffer_in = dict_calc_buffer_size(10, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t), sizeof(char), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int32_t));
+	int buffer_in = dict_calc_buffer_size(10, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t), sizeof(char), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t));
 	int buffer_out = dict_calc_buffer_size(1, sizeof(int32_t));
 	app_message_open(buffer_in, buffer_out);
 }
@@ -34,7 +34,7 @@ static void weather_ended() {
 	
 	if (weather_timeout != NULL) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "Weather timer is not NULL");
-		//weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ERROR);
+		weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ERROR);
 		layer_mark_dirty(weathericon_layer);
 		text_layer_set_text(temp_layer, " ");
 	}
@@ -84,6 +84,7 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	static char tempc_buffer[10];
 	
 	Tuple *ready_tup = dict_find(iter, KEY_READY); // cstring
+	
 	Tuple *temp_tup = dict_find(iter, KEY_TEMP); // int32
 	Tuple *tempc_tup = dict_find(iter, KEY_TEMPC); // int32
 	Tuple *id_tup = dict_find(iter, KEY_WEATHERID); // int32
@@ -93,7 +94,8 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	Tuple *showweather_tup = dict_find(iter, KEY_SHOW_WEATHER); //int8
 	Tuple *vibeconnect_tup = dict_find(iter, KEY_VIBE_ON_CONNECT); // int8
 	Tuple *vibedisconnect_tup = dict_find(iter, KEY_VIBE_ON_DISCONNECT); // int8
-	Tuple *colourscheme_tup = dict_find(iter, KEY_COLOUR_SCHEME); // int32
+	Tuple *colourscheme_tup = dict_find(iter, KEY_COLOUR_SCHEME); // int8
+	Tuple *updatetime_tup = dict_find(iter, KEY_UPDATE_TIME); // int8
 	
 	if (ready_tup) {
 		int status = (int)ready_tup->value->int32;
@@ -258,6 +260,7 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	}
 	
 	if (vibeconnect_tup) {
+		vibes_short_pulse();
   	APP_LOG(APP_LOG_LEVEL_INFO, "KEY_VIBE_ON_CONNECT received!");
   	vibe_on_connect = vibeconnect_tup->value->int8;
 		
@@ -277,6 +280,13 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "Colour scheme is %d", colourscheme);
 		persist_write_int(KEY_COLOUR_SCHEME, colourscheme);
 		pick_colours();
+	}
+	
+	if (updatetime_tup) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_UPDATE_TIME received!");
+		weatherupdatetime = updatetime_tup->value->int8;
+		APP_LOG(APP_LOG_LEVEL_INFO, "Weather update time is %d", weatherupdatetime);
+		persist_write_int(KEY_UPDATE_TIME, weatherupdatetime);
 	}
 }
 
