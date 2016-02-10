@@ -446,7 +446,7 @@ static void main_window_load(Window *window) {
 	text_layer_set_background_color(time_layer, GColorClear);
 	time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_BLACK_42));
 	text_layer_set_font(time_layer, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
-	text_layer_set_text(time_layer, "12:35");
+	text_layer_set_text(time_layer, "00:00");
 	GSize time_size = text_layer_get_content_size(time_layer);
 	//layer_set_frame(text_layer_get_layer(time_layer), GRect(PBL_IF_ROUND_ELSE(27, 7), PBL_IF_ROUND_ELSE(20, 0), time_size.w, time_size.h));
 	layer_set_frame(text_layer_get_layer(time_layer), GRect(0 - time_size.w, PBL_IF_ROUND_ELSE(20, 0), time_size.w, time_size.h));
@@ -456,7 +456,7 @@ static void main_window_load(Window *window) {
 	text_layer_set_background_color(date_layer, GColorClear);
 	date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_24));
 	text_layer_set_font(date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
-	text_layer_set_text(date_layer, "Mon 1");
+	text_layer_set_text(date_layer, "WWW 00");
 	GSize date_size = text_layer_get_content_size(date_layer);
 	//layer_set_frame(text_layer_get_layer(date_layer), GRect(PBL_IF_ROUND_ELSE(29, 9), PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h));
 	layer_set_frame(text_layer_get_layer(date_layer), GRect(0 - time_size.w, PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h));

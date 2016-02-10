@@ -4,6 +4,7 @@
         "KEY_TEMP": 1,
         "KEY_TEMPC": 2,
         "KEY_WEATHERID": 3,
+        "battNumber": 11,
         "colourScheme": 9,
         "langSel": 4,
         "showWeather": 8,

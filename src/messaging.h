@@ -12,6 +12,7 @@
 #define KEY_SHOW_WEATHER 8
 #define KEY_COLOUR_SCHEME 9
 #define KEY_UPDATE_TIME 10
+#define KEY_BATT_AS_NUM 11
 
 extern AppTimer *weather_timeout, *ready_timeout;
 extern GBitmap *weather_icon;
