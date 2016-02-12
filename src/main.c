@@ -486,7 +486,7 @@ static void main_window_load(Window *window) {
 	batt_layer = layer_create(GRect(PBL_IF_ROUND_ELSE(30, 5), 125, 14, 26));
 	layer_set_update_proc(batt_layer, draw_batt);
 	
-	battpct_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(25, 3), 121, 40, 25));
+	battpct_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(25, 3), 121, 50, 25));
 	text_layer_set_text_color(battpct_layer, gcolor_legible_over(horz));
 	text_layer_set_background_color(battpct_layer, GColorClear);
 	text_layer_set_text_alignment(battpct_layer, GTextAlignmentCenter);
