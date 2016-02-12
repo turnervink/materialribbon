@@ -105,7 +105,7 @@ Pebble.addEventListener('appmessage',
 //===== Config =====//
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'http://970ce33.ngrok.com/';
+  var url = 'http://3f878ba2.ngrok.io';
 
   console.log('Showing configuration page: ' + url);
 
@@ -129,7 +129,8 @@ Pebble.addEventListener('webviewclosed', function(e) {
       langSel: configData.langSel,
 			colourScheme: parseInt(configData.colourScheme),
 			//colourScheme: 5
-			updateTime: parseInt(configData.updateTime)
+			updateTime: parseInt(configData.updateTime),
+			battNumber: parseInt(configData.battNumber)
     }, function(e) {
       console.log('Send successful!');
 			console.log(e);

@@ -30,6 +30,7 @@ extern bool use_celsius;
 extern bool show_weather;
 extern bool vibe_on_connect;
 extern bool vibe_on_disconnect;
+extern bool batt_as_percent;
 
 void init_appmessage();
 void inbox_received_handler(DictionaryIterator *iter, void *context);
@@ -37,6 +38,7 @@ void inbox_dropped_callback(AppMessageResult reason, void *context);
 void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context);
 void outbox_sent_callback(DictionaryIterator *iterator, void *context);
 void update_time();
+void batt_handler(BatteryChargeState state);
 void update_weather();
 void pick_colours();
 

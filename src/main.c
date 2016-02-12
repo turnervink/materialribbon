@@ -5,7 +5,7 @@
 
 static Window *main_window;
 static Layer *horz_rect_layer, *diag_rect_layer, *batt_layer, *bt_layer;
-static TextLayer *time_layer, *date_layer;
+static TextLayer *time_layer, *date_layer, *battpct_layer;
 static GBitmap *batt_icon, *bt_icon, *batt_sprites;
 static GFont time_font, date_font;
 
@@ -24,6 +24,7 @@ bool use_celsius = 1;
 bool show_weather = 1;
 bool vibe_on_connect = 0;
 bool vibe_on_disconnect = 1;
+bool batt_as_percent = 0;
 int colourscheme = 0;
 int weatherupdatetime = 60;
 //static int testscheme = 4;
@@ -152,7 +153,7 @@ static void init_animations() {
 	update_time();
 }
 
-static void batt_handler(BatteryChargeState state) {
+void batt_handler(BatteryChargeState state) {
 	APP_LOG(APP_LOG_LEVEL_INFO, "Start batt_handler");
 	int pct = state.charge_percent;
 	bool charging = state.is_charging;
@@ -165,9 +166,11 @@ static void batt_handler(BatteryChargeState state) {
 	if (usewhiteicons == 1) { // If white icons are required by the colour scheme, load the correct PNG
 		APP_LOG(APP_LOG_LEVEL_INFO, "Using white icons");
 		batt_sprites = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATT_SPRITES_WHITE);
+		text_layer_set_text_color(battpct_layer, GColorWhite);
 	} else {
 		APP_LOG(APP_LOG_LEVEL_INFO, "Using black icons");
 		batt_sprites = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATT_SPRITES);
+		text_layer_set_text_color(battpct_layer, GColorBlack);
 	}
 	
 	if (batt_icon) {
@@ -191,20 +194,35 @@ static void batt_handler(BatteryChargeState state) {
 		batt_icon = gbitmap_create_with_resource(BATT_ICONS[5]);
 	}*/
 	
+	if (batt_as_percent == 1) {
+		layer_set_hidden(batt_layer, true);
+		layer_set_hidden(text_layer_get_layer(battpct_layer), false);
+	} else {
+		layer_set_hidden(batt_layer, false);
+		layer_set_hidden(text_layer_get_layer(battpct_layer), true);
+	}
+	
 	if (charging) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(70, 0, 14, 26));
+		text_layer_set_text(battpct_layer, "CHRG");
 	} else if (pct <= 10) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(84, 0, 14, 26));
+		text_layer_set_text(battpct_layer, "10%");
 	} else if (pct <= 20) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(0, 0, 14, 26));
+		text_layer_set_text(battpct_layer, "20%");
 	} else if (pct <= 40) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(14, 0, 14, 26));
+		text_layer_set_text(battpct_layer, "40%");
 	} else if (pct <= 60) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(28, 0, 14, 26));
+		text_layer_set_text(battpct_layer, "60%");
 	} else if (pct <= 80) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(42, 0, 14, 26));
+		text_layer_set_text(battpct_layer, "80%");
 	} else if (pct <= 100) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(56, 0, 14, 26));
+		text_layer_set_text(battpct_layer, "100%");
 	}
 	
 	layer_mark_dirty(batt_layer);
@@ -464,9 +482,20 @@ static void main_window_load(Window *window) {
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(time_layer));
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
 	
-	// Set up battery & BT icons
+	// Set up battery/BT icons & battery percent layer
 	batt_layer = layer_create(GRect(PBL_IF_ROUND_ELSE(30, 5), 125, 14, 26));
 	layer_set_update_proc(batt_layer, draw_batt);
+	
+	battpct_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(25, 3), 121, 40, 25));
+	text_layer_set_text_color(battpct_layer, gcolor_legible_over(horz));
+	text_layer_set_background_color(battpct_layer, GColorClear);
+	text_layer_set_text_alignment(battpct_layer, GTextAlignmentCenter);
+	text_layer_set_font(battpct_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+	text_layer_set_text(battpct_layer, "90%");
+	
+	if (persist_exists(KEY_BATT_AS_NUM)) {
+		batt_as_percent = persist_read_int(KEY_BATT_AS_NUM);
+	}
 	
 	APP_LOG(APP_LOG_LEVEL_INFO, "Checking battery level");
 	batt_handler(battery_state_service_peek());
@@ -482,6 +511,7 @@ static void main_window_load(Window *window) {
 	}
 	
 	layer_add_child(horz_rect_layer, batt_layer);
+	layer_add_child(horz_rect_layer, text_layer_get_layer(battpct_layer));
 	layer_add_child(horz_rect_layer, bt_layer);
 	
 	// Set up weather layers
