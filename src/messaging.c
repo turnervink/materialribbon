@@ -301,6 +301,7 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_BATT_AS_NUM received!");
 
   	batt_as_percent = battaspct_tup->value->int8;
+		APP_LOG(APP_LOG_LEVEL_INFO, "Battery display is %d", batt_as_percent);
 
   	persist_write_int(KEY_BATT_AS_NUM, batt_as_percent);
 		

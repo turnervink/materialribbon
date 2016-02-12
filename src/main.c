@@ -4,7 +4,7 @@
 #include "gbitmap_color_palette_manipulator.h"
 
 static Window *main_window;
-static Layer *horz_rect_layer, *diag_rect_layer, *batt_layer, *bt_layer;
+static Layer *horz_rect_layer, *diag_rect_layer, *batt_layer, *bt_layer, *steps_layer;
 static TextLayer *time_layer, *date_layer, *battpct_layer;
 static GBitmap *batt_icon, *bt_icon, *batt_sprites;
 static GFont time_font, date_font;
@@ -18,6 +18,8 @@ Layer *weathericon_layer;
 //static int lang = 4; // Hardcoded for testing
 int lang;
 int timeout = 60000;
+
+static int steps;
 
 // Config options
 bool use_celsius = 1;
@@ -248,6 +250,11 @@ static void bt_handler(bool connected) {
 	layer_mark_dirty(bt_layer);
 }
 
+static void health_handler(HealthEventType event, void *context) {
+	steps = health_service_sum_today(HealthMetricStepCount);
+	APP_LOG(APP_LOG_LEVEL_INFO, "Steps: %d", steps);
+}
+
 static void setup_rects(void) {
 	horz_rect = gpath_create(&HORZ_PATH_POINTS);
 	diag_rect = gpath_create(&DIAG_PATH_POINTS);
@@ -405,6 +412,20 @@ static void draw_diag_rect(Layer *layer, GContext *ctx) {
 	gpath_draw_outline(ctx, diag_rect);
 }
 
+static void draw_step_bar(Layer *layer, GContext *ctx) {
+	graphics_context_set_fill_color(ctx, diag);
+	graphics_context_set_stroke_color(ctx, diag);
+	
+	int goal = 10000 / 80;
+	APP_LOG(APP_LOG_LEVEL_INFO, "Steps/goal in draw step bar %d", steps / goal);
+	
+	//graphics_draw_rect(ctx, GRect(2, 113, 82, 5));
+	graphics_context_set_fill_color(ctx, diagdrop);
+	graphics_fill_rect(ctx, GRect(2, 113, 80, 5), 3, GCornersAll);
+	graphics_context_set_fill_color(ctx, diag);
+	graphics_fill_rect(ctx, GRect(2, 113, steps / goal, 5), 3, GCornersAll);
+}
+
 static void draw_batt(Layer *layer, GContext *ctx) {
 	APP_LOG(APP_LOG_LEVEL_INFO, "Drawing battery icon");
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
@@ -514,6 +535,12 @@ static void main_window_load(Window *window) {
 	layer_add_child(horz_rect_layer, text_layer_get_layer(battpct_layer));
 	layer_add_child(horz_rect_layer, bt_layer);
 	
+	// Set up step goal layer
+	steps_layer = layer_create(GRect(0, 0, bounds.size.w, bounds.size.h));
+	layer_set_update_proc(steps_layer, draw_step_bar);
+	
+	layer_add_child(window_get_root_layer(window), steps_layer);
+	
 	// Set up weather layers
 	weathericon_layer = layer_create(GRect(PBL_IF_ROUND_ELSE(160, 122), 73, 20, 23));
 	layer_set_update_proc(weathericon_layer, draw_weathericon);
@@ -618,7 +645,8 @@ static void init() {
 	tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
 	battery_state_service_subscribe(batt_handler);
 	bluetooth_connection_service_subscribe(bt_handler);
-	
+	health_service_events_subscribe(health_handler, NULL);	
+
 	init_appmessage(); // Start appmessaging in messaging.c
 	init_animations(); // I like to move it move it
 }
