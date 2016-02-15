@@ -14,23 +14,23 @@
 #define KEY_UPDATE_TIME 10
 #define KEY_BATT_AS_NUM 11
 
-extern AppTimer *weather_timeout, *ready_timeout;
-extern GBitmap *weather_icon;
-extern TextLayer *temp_layer;
-extern Layer *weathericon_layer;
+AppTimer *weather_timeout, *ready_timeout;
+GBitmap *weather_icon;
+TextLayer *temp_layer;
+Layer *weathericon_layer;
 
 //static int lang = 4; // Hardcoded for testing
-extern int lang;
-extern int timeout;
-extern int colourscheme;
-extern int weatherupdatetime;
+int lang;
+int timeout;
+int colourscheme;
+int weatherupdatetime;
 
 // Config options
-extern bool use_celsius;
-extern bool show_weather;
-extern bool vibe_on_connect;
-extern bool vibe_on_disconnect;
-extern bool batt_as_percent;
+bool use_celsius;
+bool show_weather;
+bool vibe_on_connect;
+bool vibe_on_disconnect;
+bool batt_as_percent;
 
 void init_appmessage();
 void inbox_received_handler(DictionaryIterator *iter, void *context);

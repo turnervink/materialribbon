@@ -37,6 +37,8 @@ static GColor horz;
 static GColor horzdrop;
 static GColor diag;
 static GColor diagdrop;
+static GColor stepsfore;
+static GColor stepsdrop;
 
 static GPath *horz_rect, *diag_rect, *horz_drop, *diag_drop = NULL;
 
@@ -195,6 +197,12 @@ void batt_handler(BatteryChargeState state) {
 	} else if (pct <= 100) {
 		batt_icon = gbitmap_create_with_resource(BATT_ICONS[5]);
 	}*/
+
+	static char batt_buffer[10];
+	
+	snprintf(batt_buffer, sizeof(batt_buffer), "%d%%", pct);
+	APP_LOG(APP_LOG_LEVEL_INFO, "Batt_buffer %s", batt_buffer);
+	text_layer_set_text(battpct_layer, batt_buffer);
 	
 	if (batt_as_percent == 1) {
 		layer_set_hidden(batt_layer, true);
@@ -209,22 +217,22 @@ void batt_handler(BatteryChargeState state) {
 		text_layer_set_text(battpct_layer, "CHRG");
 	} else if (pct <= 10) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(84, 0, 14, 26));
-		text_layer_set_text(battpct_layer, "10%");
+		//text_layer_set_text(battpct_layer, "10%");
 	} else if (pct <= 20) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(0, 0, 14, 26));
-		text_layer_set_text(battpct_layer, "20%");
+		//text_layer_set_text(battpct_layer, "20%");
 	} else if (pct <= 40) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(14, 0, 14, 26));
-		text_layer_set_text(battpct_layer, "40%");
+		//text_layer_set_text(battpct_layer, "40%");
 	} else if (pct <= 60) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(28, 0, 14, 26));
-		text_layer_set_text(battpct_layer, "60%");
+		//text_layer_set_text(battpct_layer, "60%");
 	} else if (pct <= 80) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(42, 0, 14, 26));
-		text_layer_set_text(battpct_layer, "80%");
+		//text_layer_set_text(battpct_layer, "80%");
 	} else if (pct <= 100) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(56, 0, 14, 26));
-		text_layer_set_text(battpct_layer, "100%");
+		//text_layer_set_text(battpct_layer, "100%");
 	}
 	
 	layer_mark_dirty(batt_layer);
@@ -274,6 +282,8 @@ void pick_colours() {
 		horzdrop = GColorFromRGB(245, 124, 0);
 		diag = GColorFromRGB(33, 150, 243);
 		diagdrop = GColorFromRGB(13, 71, 161);
+		stepsfore = horz;
+		stepsdrop = horzdrop;
 		text_layer_set_text_color(time_layer, GColorBlack);
 		text_layer_set_text_color(date_layer, GColorBlack);
 		text_layer_set_text_color(temp_layer, GColorBlack);
@@ -284,6 +294,8 @@ void pick_colours() {
 		horzdrop = GColorFromRGB(255, 196, 0);
 		diag = GColorFromRGB(170, 255, 85);
 		diagdrop = GColorFromRGB(85, 255, 0);
+		stepsfore = diag;
+		stepsdrop = diagdrop;
 		text_layer_set_text_color(time_layer, GColorWhite);
 		text_layer_set_text_color(date_layer, GColorWhite);
 		text_layer_set_text_color(temp_layer, GColorBlack);
@@ -294,6 +306,8 @@ void pick_colours() {
 		horzdrop = GColorFromRGB(170, 170, 0);
 		diag = GColorFromRGB(255, 255, 0);
 		diagdrop = GColorFromRGB(170, 170, 0);
+		stepsfore = horz;
+		stepsdrop = horzdrop;
 		text_layer_set_text_color(time_layer, GColorYellow);
 		text_layer_set_text_color(date_layer, GColorYellow);
 		text_layer_set_text_color(temp_layer, GColorBlack);
@@ -304,6 +318,8 @@ void pick_colours() {
 		horzdrop = GColorFromRGB(170, 0, 170);
 		diag = GColorFromRGB(0, 170, 170);
 		diagdrop = GColorFromRGB(0, 85, 170);
+		stepsfore = diag;
+		stepsdrop = diagdrop;
 		text_layer_set_text_color(time_layer, GColorBlack);
 		text_layer_set_text_color(date_layer, GColorBlack);
 		text_layer_set_text_color(temp_layer, GColorBlack);
@@ -314,6 +330,8 @@ void pick_colours() {
 		horzdrop = GColorFromRGB(0, 255, 255);
 		diag = GColorFromRGB(170, 255, 0);
 		diagdrop = GColorFromRGB(85, 255, 0);
+		stepsfore = diag;
+		stepsdrop = diagdrop;
 		text_layer_set_text_color(time_layer, GColorWhite);
 		text_layer_set_text_color(date_layer, GColorWhite);
 		text_layer_set_text_color(temp_layer, GColorBlack);
@@ -324,6 +342,8 @@ void pick_colours() {
 		horzdrop = GColorFromRGB(255, 170, 0);
 		diag = GColorFromRGB(170, 255, 0);
 		diagdrop = GColorFromRGB(85, 255, 0);
+		stepsfore = diag;
+		stepsdrop = GColorFromRGB(0, 170, 0);
 		text_layer_set_text_color(time_layer, GColorWhite);
 		text_layer_set_text_color(date_layer, GColorWhite);
 		text_layer_set_text_color(temp_layer, GColorBlack);
@@ -334,6 +354,8 @@ void pick_colours() {
 		horzdrop = GColorFromRGB(245, 124, 0);
 		diag = GColorFromRGB(33, 150, 243);
 		diagdrop = GColorFromRGB(13, 71, 161);
+		stepsfore = horz;
+		stepsdrop = horzdrop;
 		text_layer_set_text_color(time_layer, GColorWhite);
 		text_layer_set_text_color(date_layer, GColorWhite);
 		text_layer_set_text_color(temp_layer, GColorWhite);
@@ -369,8 +391,12 @@ static void draw_horz_rect(Layer *layer, GContext *ctx) {
 		gpath_draw_outline(ctx, horz_rect);
 	}*/
 	
+	GRect bounds = layer_get_bounds(window_get_root_layer(main_window));
+	int goal = 10000 / 144; // Divide by 120 for Chalk
+	APP_LOG(APP_LOG_LEVEL_INFO, "Steps/goal in draw_horz_rect bar %d", steps / goal);
+	
 	graphics_context_set_fill_color(ctx, horzdrop);
-	gpath_draw_filled(ctx, horz_drop);
+	graphics_fill_rect(ctx, GRect(0, 120, steps / goal, 42), 0, GCornerNone); // <-- Change this to use the horz shadow as step goal, start at x = 31 for Chalk
 
 	graphics_context_set_fill_color(ctx, horz);
 	gpath_draw_filled(ctx, horz_rect);
@@ -418,12 +444,15 @@ static void draw_step_bar(Layer *layer, GContext *ctx) {
 	
 	int goal = 10000 / 80;
 	APP_LOG(APP_LOG_LEVEL_INFO, "Steps/goal in draw step bar %d", steps / goal);
+	//steps = 5000;
 	
 	//graphics_draw_rect(ctx, GRect(2, 113, 82, 5));
-	graphics_context_set_fill_color(ctx, diagdrop);
+	/*graphics_context_set_fill_color(ctx, stepsdrop);
 	graphics_fill_rect(ctx, GRect(2, 113, 80, 5), 3, GCornersAll);
-	graphics_context_set_fill_color(ctx, diag);
-	graphics_fill_rect(ctx, GRect(2, 113, steps / goal, 5), 3, GCornersAll);
+	graphics_context_set_fill_color(ctx, stepsfore);
+	graphics_fill_rect(ctx, GRect(2, 113, steps / goal, 5), 3, GCornersAll);*/
+	
+	graphics_fill_rect(ctx, GRect(-1, 120, 181, 35), 0, GCornerNone);
 }
 
 static void draw_batt(Layer *layer, GContext *ctx) {
@@ -468,6 +497,12 @@ static void main_window_load(Window *window) {
 	setup_rects();
 	
 	GRect bounds = layer_get_bounds(window_get_root_layer(window));
+	
+	// Set up step goal layer
+	steps_layer = layer_create(GRect(0, 0, bounds.size.w, bounds.size.h));
+	layer_set_update_proc(steps_layer, draw_step_bar);
+	
+	layer_add_child(window_get_root_layer(window), steps_layer);
 	
 	// Set up shapes
 	diag_rect_layer = layer_create(GRect(200, 200, bounds.size.w, bounds.size.h));
@@ -534,12 +569,6 @@ static void main_window_load(Window *window) {
 	layer_add_child(horz_rect_layer, batt_layer);
 	layer_add_child(horz_rect_layer, text_layer_get_layer(battpct_layer));
 	layer_add_child(horz_rect_layer, bt_layer);
-	
-	// Set up step goal layer
-	steps_layer = layer_create(GRect(0, 0, bounds.size.w, bounds.size.h));
-	layer_set_update_proc(steps_layer, draw_step_bar);
-	
-	layer_add_child(window_get_root_layer(window), steps_layer);
 	
 	// Set up weather layers
 	weathericon_layer = layer_create(GRect(PBL_IF_ROUND_ELSE(160, 122), 73, 20, 23));
