@@ -23,7 +23,7 @@ void init_appmessage() {
 	app_message_register_outbox_sent(outbox_sent_callback);
 	
 	// Create buffers based on what we are sending/receiving
-	int buffer_in = dict_calc_buffer_size(10, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t), sizeof(char), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t));
+	int buffer_in = dict_calc_buffer_size(10, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t), sizeof(char), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int16_t));
 	int buffer_out = dict_calc_buffer_size(1, sizeof(int32_t));
 	app_message_open(buffer_in, buffer_out);
 }
@@ -97,6 +97,8 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	Tuple *colourscheme_tup = dict_find(iter, KEY_COLOUR_SCHEME); // int8
 	Tuple *updatetime_tup = dict_find(iter, KEY_UPDATE_TIME); // int8
 	Tuple *battaspct_tup = dict_find(iter, KEY_BATT_AS_NUM); // int8
+	Tuple *showsteps_tup = dict_find(iter, KEY_SHOW_STEPS); // int8
+	Tuple *stepgoal_tup = dict_find(iter, KEY_STEP_GOAL); // int16
 	
 	if (ready_tup) {
 		int status = (int)ready_tup->value->int32;
@@ -306,6 +308,20 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
   	persist_write_int(KEY_BATT_AS_NUM, batt_as_percent);
 		
 		batt_handler(battery_state_service_peek());
+	}
+	
+	if (showsteps_tup) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_SHOW_STEPS received!");
+  	show_step_goal = showsteps_tup->value->int8;
+		
+		persist_write_int(KEY_SHOW_STEPS, show_step_goal);
+	}
+	
+	if (stepgoal_tup) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_STEP_GOAL received!");
+  	stepgoal = stepgoal_tup->value->int16;
+		
+		persist_write_int(KEY_STEP_GOAL, stepgoal);
 	}
 }
 

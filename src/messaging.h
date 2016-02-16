@@ -13,6 +13,8 @@
 #define KEY_COLOUR_SCHEME 9
 #define KEY_UPDATE_TIME 10
 #define KEY_BATT_AS_NUM 11
+#define KEY_SHOW_STEPS 12
+#define KEY_STEP_GOAL 13
 
 AppTimer *weather_timeout, *ready_timeout;
 GBitmap *weather_icon;
@@ -24,6 +26,7 @@ int lang;
 int timeout;
 int colourscheme;
 int weatherupdatetime;
+int stepgoal;
 
 // Config options
 bool use_celsius;
@@ -31,6 +34,7 @@ bool show_weather;
 bool vibe_on_connect;
 bool vibe_on_disconnect;
 bool batt_as_percent;
+bool show_step_goal;
 
 void init_appmessage();
 void inbox_received_handler(DictionaryIterator *iter, void *context);

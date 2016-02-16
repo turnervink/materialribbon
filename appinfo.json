@@ -7,7 +7,9 @@
         "battNumber": 11,
         "colourScheme": 9,
         "langSel": 4,
+        "showSteps": 12,
         "showWeather": 8,
+        "stepGoal": 13,
         "updateTime": 10,
         "useCelsius": 5,
         "vibeConnect": 6,
@@ -15,7 +17,8 @@
     },
     "capabilities": [
         "location",
-        "configurable"
+        "configurable",
+        "health"
     ],
     "companyName": "Turner Vink",
     "enableMultiJS": false,

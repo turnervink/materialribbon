@@ -20,6 +20,8 @@ int lang;
 int timeout = 60000;
 
 static int steps;
+static bool steps_available;
+int stepgoal = 10000;
 
 // Config options
 bool use_celsius = 1;
@@ -27,6 +29,7 @@ bool show_weather = 1;
 bool vibe_on_connect = 0;
 bool vibe_on_disconnect = 1;
 bool batt_as_percent = 0;
+bool show_step_goal = 1;
 int colourscheme = 0;
 int weatherupdatetime = 60;
 //static int testscheme = 4;
@@ -258,10 +261,23 @@ static void bt_handler(bool connected) {
 	layer_mark_dirty(bt_layer);
 }
 
+#ifdef PBL_HEALTH
 static void health_handler(HealthEventType event, void *context) {
-	steps = health_service_sum_today(HealthMetricStepCount);
-	APP_LOG(APP_LOG_LEVEL_INFO, "Steps: %d", steps);
+	time_t start = time_start_of_today();
+	time_t end = time(NULL);
+	HealthServiceAccessibilityMask mask = health_service_metric_accessible(HealthMetricStepCount, start, end);
+	
+	if (mask & HealthServiceAccessibilityMaskAvailable) {
+		steps_available = true;
+		APP_LOG(APP_LOG_LEVEL_INFO, "Step data available!");
+		steps = health_service_sum_today(HealthMetricStepCount);
+		APP_LOG(APP_LOG_LEVEL_INFO, "Steps: %d", steps);
+	} else {
+		steps_available = false;
+		APP_LOG(APP_LOG_LEVEL_INFO, "Step data unavailable");
+	}
 }
+#endif
 
 static void setup_rects(void) {
 	horz_rect = gpath_create(&HORZ_PATH_POINTS);
@@ -391,12 +407,25 @@ static void draw_horz_rect(Layer *layer, GContext *ctx) {
 		gpath_draw_outline(ctx, horz_rect);
 	}*/
 	
+	int steps_per_px = stepgoal / PBL_IF_ROUND_ELSE(120, 144); // Divide by 120 for Chalk
+	APP_LOG(APP_LOG_LEVEL_INFO, "Steps/goal in draw_horz_rect bar %d", steps / steps_per_px);
 	GRect bounds = layer_get_bounds(window_get_root_layer(main_window));
-	int goal = 10000 / 144; // Divide by 120 for Chalk
-	APP_LOG(APP_LOG_LEVEL_INFO, "Steps/goal in draw_horz_rect bar %d", steps / goal);
 	
 	graphics_context_set_fill_color(ctx, horzdrop);
-	graphics_fill_rect(ctx, GRect(0, 120, steps / goal, 42), 0, GCornerNone); // <-- Change this to use the horz shadow as step goal, start at x = 31 for Chalk
+	
+	if (show_step_goal) {
+		if (steps_available) {
+			if (steps >= 10000) {
+				graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
+			} else {
+				graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, steps / steps_per_px, 42), 0, GCornerNone); // <-- Change this to use the horz shadow as step goal, start at x = 31 for Chalk
+			}
+		} else {
+			graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
+		}
+	} else {
+		graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
+	}
 
 	graphics_context_set_fill_color(ctx, horz);
 	gpath_draw_filled(ctx, horz_rect);
@@ -452,7 +481,7 @@ static void draw_step_bar(Layer *layer, GContext *ctx) {
 	graphics_context_set_fill_color(ctx, stepsfore);
 	graphics_fill_rect(ctx, GRect(2, 113, steps / goal, 5), 3, GCornersAll);*/
 	
-	graphics_fill_rect(ctx, GRect(-1, 120, 181, 35), 0, GCornerNone);
+	//graphics_fill_rect(ctx, GRect(-1, 120, 181, 35), 0, GCornerNone);
 }
 
 static void draw_batt(Layer *layer, GContext *ctx) {
@@ -621,6 +650,14 @@ static void main_window_load(Window *window) {
 		weatherupdatetime = persist_read_int(KEY_UPDATE_TIME);
 	}
 	
+	if (persist_exists(KEY_SHOW_STEPS)) {
+		show_step_goal = persist_read_int(KEY_SHOW_STEPS);
+	}
+	
+	if (persist_exists(KEY_STEP_GOAL)) {
+		stepgoal = persist_read_int(KEY_STEP_GOAL);
+	}
+	
 	pick_colours(); // Pick the proper colour scheme
 	weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING);
 }
@@ -674,7 +711,9 @@ static void init() {
 	tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
 	battery_state_service_subscribe(batt_handler);
 	bluetooth_connection_service_subscribe(bt_handler);
-	health_service_events_subscribe(health_handler, NULL);	
+	#ifdef PBL_HEALTH
+		health_service_events_subscribe(health_handler, NULL);
+	#endif
 
 	init_appmessage(); // Start appmessaging in messaging.c
 	init_animations(); // I like to move it move it
