@@ -3,6 +3,8 @@
 #include "languages.h"
 #include "gbitmap_color_palette_manipulator.h"
 
+//#define SHOW_RECEIVED_LOGS
+
 const int WEATHER_ICONS[] = {
 	RESOURCE_ID_ICON_UNKNOWN,				// 0
 	RESOURCE_ID_ICON_THUNDERSTORM,	// 1
@@ -115,7 +117,9 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	}
 	
 	if (temp_tup) {
+		#ifdef SHOW_RECEIVED_LOGS
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_TEMP received");
+		#endif
 		cancel_weather_timeout();
 		
 		snprintf(temp_buffer, sizeof(temp_buffer), "%d°", (int)temp_tup->value->int32);
@@ -123,7 +127,9 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	}
 	
 	if (tempc_tup) {
+		#ifdef SHOW_RECEIVED_LOGS
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_TEMPC received");
+		#endif
 		cancel_weather_timeout();
 		
 		snprintf(tempc_buffer, sizeof(tempc_buffer), "%d°", (int)tempc_tup->value->int32);
@@ -131,7 +137,9 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	}
 	
 	if (usecelsius_tup) {
+		#ifdef SHOW_RECEIVED_LOGS
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_USE_CELSIUS received!");
+		#endif
 
   	use_celsius = usecelsius_tup->value->int8;
 
@@ -139,7 +147,9 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	}	
 	
 	if (showweather_tup) {
+		#ifdef SHOW_RECEIVED_LOGS
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_SHOW_WEATHER received!");
+		#endif
 		
 		show_weather = showweather_tup->value->int8;
 		APP_LOG(APP_LOG_LEVEL_INFO, "show_weather: %d", show_weather);
@@ -188,8 +198,8 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		
 		time_t temp = time(NULL);
 		struct tm *tick_time = localtime(&temp);
-		//int hour = tick_time->tm_hour;
-		int hour = 10;
+		int hour = tick_time->tm_hour;
+		//int hour = 10;
 		
 		// Pick the right icon
 		if ((weatherid % 900) < 100) {
@@ -236,7 +246,9 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	}
 	
 	if (lang_tup) {
+		#ifdef SHOW_RECEIVED_LOGS
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_LANGUAGE received!");
+		#endif
   	if (strcmp(lang_tup->value->cstring, "en") == 0) {
   		APP_LOG(APP_LOG_LEVEL_INFO, "Using English");
   		lang = 0;
@@ -271,21 +283,27 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	
 	if (vibeconnect_tup) {
 		vibes_short_pulse();
+		#ifdef SHOW_RECEIVED_LOGS
   	APP_LOG(APP_LOG_LEVEL_INFO, "KEY_VIBE_ON_CONNECT received!");
+		#endif
   	vibe_on_connect = vibeconnect_tup->value->int8;
 		
 		persist_write_int(KEY_VIBE_ON_CONNECT, vibe_on_connect);
   }
 
   if (vibedisconnect_tup) {
+		#ifdef SHOW_RECEIVED_LOGS
   	APP_LOG(APP_LOG_LEVEL_INFO, "KEY_VIBE_ON_DISCONNECT received!");
+		#endif
   	vibe_on_disconnect = vibedisconnect_tup->value->int8;
 		
 		persist_write_int(KEY_VIBE_ON_DISCONNECT, vibe_on_connect);
   }
 	
 	if (colourscheme_tup) {
+		#ifdef SHOW_RECEIVED_LOGS
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_COLOUR_SCHEME received!");
+		#endif
 		colourscheme = colourscheme_tup->value->int8;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Colour scheme is %d", colourscheme);
 		persist_write_int(KEY_COLOUR_SCHEME, colourscheme);
@@ -293,14 +311,18 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	}
 	
 	if (updatetime_tup) {
+		#ifdef SHOW_RECEIVED_LOGS
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_UPDATE_TIME received!");
+		#endif
 		weatherupdatetime = updatetime_tup->value->int8;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Weather update time is %d", weatherupdatetime);
 		persist_write_int(KEY_UPDATE_TIME, weatherupdatetime);
 	}
 	
 	if (battaspct_tup) {
+		#ifdef SHOW_RECEIVED_LOGS
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_BATT_AS_NUM received!");
+		#endif
 
   	batt_as_percent = battaspct_tup->value->int8;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Battery display is %d", batt_as_percent);
@@ -311,14 +333,18 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	}
 	
 	if (showsteps_tup) {
+		#ifdef SHOW_RECEIVED_LOGS
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_SHOW_STEPS received!");
+		#endif
   	show_step_goal = showsteps_tup->value->int8;
 		
 		persist_write_int(KEY_SHOW_STEPS, show_step_goal);
 	}
 	
 	if (stepgoal_tup) {
+		#ifdef SHOW_RECEIVED_LOGS
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_STEP_GOAL received!");
+		#endif
   	stepgoal = stepgoal_tup->value->int16;
 		
 		persist_write_int(KEY_STEP_GOAL, stepgoal);

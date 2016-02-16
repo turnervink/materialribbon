@@ -93,7 +93,6 @@ Pebble.addEventListener('appmessage',
   function(e) {
     console.log('AppMessage received!');
     console.log('Message contents: ' + JSON.stringify(e.payload));
-		console.log(e.payload.KEY_WEATHERID);
 
     if (e.payload.KEY_WEATHERID === 0) { // If KEY_CONDITIONS exists in the appmessage
       console.log('Fetching weather');
@@ -105,7 +104,7 @@ Pebble.addEventListener('appmessage',
 //===== Config =====//
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'http://a4cbfeb3.ngrok.io';
+  var url = 'http://970ce33.ngrok.com';
 
   console.log('Showing configuration page: ' + url);
 
@@ -119,8 +118,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
 
   if (configData.useCelsius >= 0) { // If we have received the correct data (not sure why we wouldn't, but who knows?)
     // Send all keys to Pebble
-		console.log("Sending config dict");
-		console.log("showWeather: " + configData.showWeather);
+		console.log("Sending config settings");
     Pebble.sendAppMessage({
       useCelsius: configData.useCelsius ? 1 : 0,
 			showWeather: configData.showWeather ? 1 : 0,

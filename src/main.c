@@ -3,6 +3,8 @@
 #include "messaging.h"
 #include "gbitmap_color_palette_manipulator.h"
 
+//#define SHOW_DRAW_LOGS
+
 static Window *main_window;
 static Layer *horz_rect_layer, *diag_rect_layer, *batt_layer, *bt_layer, *steps_layer;
 static TextLayer *time_layer, *date_layer, *battpct_layer;
@@ -161,7 +163,6 @@ static void init_animations() {
 }
 
 void batt_handler(BatteryChargeState state) {
-	APP_LOG(APP_LOG_LEVEL_INFO, "Start batt_handler");
 	int pct = state.charge_percent;
 	bool charging = state.is_charging;
 	
@@ -181,7 +182,7 @@ void batt_handler(BatteryChargeState state) {
 	}
 	
 	if (batt_icon) {
-		APP_LOG(APP_LOG_LEVEL_INFO, "Destroying batT_icon in batt_handler");
+		APP_LOG(APP_LOG_LEVEL_INFO, "Destroying batt_icon in batt_handler");
 		gbitmap_destroy(batt_icon);
 	}
 	
@@ -204,7 +205,6 @@ void batt_handler(BatteryChargeState state) {
 	static char batt_buffer[10];
 	
 	snprintf(batt_buffer, sizeof(batt_buffer), "%d%%", pct);
-	APP_LOG(APP_LOG_LEVEL_INFO, "Batt_buffer %s", batt_buffer);
 	text_layer_set_text(battpct_layer, batt_buffer);
 	
 	if (batt_as_percent == 1) {
@@ -408,7 +408,9 @@ static void draw_horz_rect(Layer *layer, GContext *ctx) {
 	}*/
 	
 	int steps_per_px = stepgoal / PBL_IF_ROUND_ELSE(120, 144); // Divide by 120 for Chalk
+	#ifdef SHOW_DRAW_LOGS
 	APP_LOG(APP_LOG_LEVEL_INFO, "Steps/goal in draw_horz_rect bar %d", steps / steps_per_px);
+	#endif
 	GRect bounds = layer_get_bounds(window_get_root_layer(main_window));
 	
 	graphics_context_set_fill_color(ctx, horzdrop);
@@ -471,8 +473,9 @@ static void draw_step_bar(Layer *layer, GContext *ctx) {
 	graphics_context_set_fill_color(ctx, diag);
 	graphics_context_set_stroke_color(ctx, diag);
 	
-	int goal = 10000 / 80;
+	#ifdef SHOW_DRAW_LOGS
 	APP_LOG(APP_LOG_LEVEL_INFO, "Steps/goal in draw step bar %d", steps / goal);
+	#endif
 	//steps = 5000;
 	
 	//graphics_draw_rect(ctx, GRect(2, 113, 82, 5));
@@ -485,14 +488,18 @@ static void draw_step_bar(Layer *layer, GContext *ctx) {
 }
 
 static void draw_batt(Layer *layer, GContext *ctx) {
+	#ifdef SHOW_DRAW_LOGS
 	APP_LOG(APP_LOG_LEVEL_INFO, "Drawing battery icon");
+	#endif
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
 	//replace_gbitmap_color(GColorBlack, gcolor_legible_over(horz), batt_icon, NULL); // Pick white or black for icon based on colour scheme
 	graphics_draw_bitmap_in_rect(ctx, batt_icon, layer_get_bounds(batt_layer));
 }
 
 static void draw_bt(Layer *layer, GContext *ctx) {
+	#ifdef SHOW_DRAW_LOGS
 	APP_LOG(APP_LOG_LEVEL_INFO, "Drawing BT icon");
+	#endif
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
 	//bt_icon = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CONNECTED);
 	if (bluetooth_connection_service_peek()) {
@@ -505,7 +512,9 @@ static void draw_bt(Layer *layer, GContext *ctx) {
 }
 
 static void draw_weathericon(Layer *layer, GContext *ctx) {
+	#ifdef SHOW_DRAW_LOGS
 	APP_LOG(APP_LOG_LEVEL_INFO, "Drawing weather icon");
+	#endif
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
 	replace_gbitmap_color(GColorBlack, gcolor_legible_over(diag), weather_icon, weathericon_layer);
 	graphics_draw_bitmap_in_rect(ctx, weather_icon, layer_get_bounds(weathericon_layer));
