@@ -588,6 +588,14 @@ static void main_window_load(Window *window) {
 	bt_layer = layer_create(GRect(PBL_IF_ROUND_ELSE(135, 118), 126, 22, 24));
 	layer_set_update_proc(bt_layer, draw_bt);
 	
+	if (persist_exists(KEY_VIBE_ON_CONNECT)) {
+		vibe_on_connect = persist_read_int(KEY_VIBE_ON_CONNECT);
+	}
+	
+	if (persist_exists(KEY_VIBE_ON_DISCONNECT)) {
+		vibe_on_disconnect = persist_read_int(KEY_VIBE_ON_DISCONNECT);
+	}
+	
 	APP_LOG(APP_LOG_LEVEL_INFO, "Checking BT status");
 	if (bluetooth_connection_service_peek()) {
 		bt_icon = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CONNECTED);
