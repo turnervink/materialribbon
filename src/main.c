@@ -131,7 +131,7 @@ void update_time() {
 	
 	// Select the correct strings from languages.c and write to buffer along with date
 	snprintf(date_buffer, sizeof(date_buffer), "%s %d", dayNames[lang][weekday], day);
-	
+
 	text_layer_set_text(date_layer, date_buffer); // Display the date info
 }
 
@@ -568,7 +568,7 @@ static void main_window_load(Window *window) {
 	text_layer_set_background_color(date_layer, GColorClear);
 	date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_24));
 	text_layer_set_font(date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
-	text_layer_set_text(date_layer, "WWW 00");
+	text_layer_set_text(date_layer, "Mon 00");
 	GSize date_size = text_layer_get_content_size(date_layer);
 	//layer_set_frame(text_layer_get_layer(date_layer), GRect(PBL_IF_ROUND_ELSE(29, 9), PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h));
 	layer_set_frame(text_layer_get_layer(date_layer), GRect(0 - time_size.w, PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h));
@@ -580,12 +580,11 @@ static void main_window_load(Window *window) {
 	batt_layer = layer_create(GRect(PBL_IF_ROUND_ELSE(30, 5), 125, 14, 26));
 	layer_set_update_proc(batt_layer, draw_batt);
 	
-	battpct_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(25, 3), 121, 50, 25));
+	battpct_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(25, 4), 121, 50, 25));
 	text_layer_set_text_color(battpct_layer, gcolor_legible_over(horz));
 	text_layer_set_background_color(battpct_layer, GColorClear);
-	text_layer_set_text_alignment(battpct_layer, GTextAlignmentCenter);
+	text_layer_set_text_alignment(battpct_layer, GTextAlignmentLeft);
 	text_layer_set_font(battpct_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-	text_layer_set_text(battpct_layer, "90%");
 	
 	if (persist_exists(KEY_BATT_AS_NUM)) {
 		batt_as_percent = persist_read_int(KEY_BATT_AS_NUM);
@@ -703,8 +702,8 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 	
 	if(tick_time->tm_min % weatherupdatetime == 0) {
 			if (weather_icon != NULL) {
-				APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in tick_handler");
-				gbitmap_destroy(weather_icon);
+				//APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in tick_handler");
+				//gbitmap_destroy(weather_icon);
 			}
 			if (show_weather == 1) {
 				update_weather();

@@ -44,11 +44,11 @@ static void weather_ended() {
 
 void update_weather() {
 	// Show the loading icon, request the weather, and start the timeout
-	weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING);
+	//weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING);
 	layer_mark_dirty(weathericon_layer);
 	GRect icon = gbitmap_get_bounds(weather_icon);
 	layer_set_frame(weathericon_layer, GRect(PBL_IF_ROUND_ELSE(165 - (icon.size.w / 2), 133 - (icon.size.w / 2)), 73, 20, 23));
-	text_layer_set_text(temp_layer, " ");
+	//text_layer_set_text(temp_layer, NULL);
 	
 	// Begin dictionary
 	DictionaryIterator *iter;
@@ -123,7 +123,6 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		cancel_weather_timeout();
 		
 		snprintf(temp_buffer, sizeof(temp_buffer), "%d°", (int)temp_tup->value->int32);
-		//snprintf(tempc_buffer, sizeof(tempc_buffer), "13°");
 	}
 	
 	if (tempc_tup) {
@@ -133,7 +132,6 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		cancel_weather_timeout();
 		
 		snprintf(tempc_buffer, sizeof(tempc_buffer), "%d°", (int)tempc_tup->value->int32);
-		//snprintf(tempc_buffer, sizeof(tempc_buffer), "13°");
 	}
 	
 	if (usecelsius_tup) {
@@ -352,7 +350,7 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 }
 
 void inbox_dropped_callback(AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped");
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped, %d", reason);
 }
 
 void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
