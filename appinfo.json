@@ -75,12 +75,6 @@
                 "type": "bitmap"
             },
             {
-                "file": "images/error.png",
-                "name": "ICON_ERROR",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
                 "file": "images/fog.png",
                 "name": "ICON_FOG",
                 "targetPlatforms": null,
