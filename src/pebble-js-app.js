@@ -20,29 +20,29 @@ var xhrRequest = function (url, type, callback) {
 function locationSuccess(pos) {
   // Construct URL
   var url = 'http://api.openweathermap.org/data/2.5/weather?lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude + '&appid=2874bea34ea1f91820fa07af69939eea';
-  
+
   console.log("Lat is " + pos.coords.latitude);
   console.log("Lon is " + pos.coords.longitude);
   console.log('URL is ' + url);
 
   // Send request to OpenWeatherMap
-  xhrRequest(url, 'GET', 
+  xhrRequest(url, 'GET',
     function(responseText) {
       console.log("Parsing JSON");
-      
+
       var json = JSON.parse(responseText); // Parse JSON response
       console.log(JSON.parse(responseText));
 
       var temperature = Math.round(((json.main.temp - 273.15) * 1.8) + 32); // Convert from Kelvin to Fahrenheit
       console.log("Temperature in Fahrenheit is " + temperature);
-      
+
       var temperaturec = Math.round(json.main.temp - 273.15); // Convert from Kelvin to Celsius
       console.log("Temperature in Celsius is " + temperaturec);
 
       // Conditions
-      var id = json.weather[0].id;      
+      var id = json.weather[0].id;
       console.log("Weather ID is " + id);
-      
+
       // Assemble weather info into dictionary
       var dictionary = {
         "KEY_TEMP": temperature,
@@ -61,7 +61,7 @@ function locationSuccess(pos) {
 					console.log(e);
         }
       );
-    }      
+    }
   );
 }
 
@@ -98,13 +98,13 @@ Pebble.addEventListener('appmessage',
       console.log('Fetching weather');
       getWeather(); // Fetch the weather
     }
-  }                     
+  }
 );
 
 //===== Config =====//
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'http://309dffe5.ngrok.io';
+  var url = 'http://turnervink.github.io/materialribbon-config/';
 
   console.log('Showing configuration page: ' + url);
 

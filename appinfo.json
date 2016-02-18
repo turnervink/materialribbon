@@ -69,8 +69,8 @@
                 "type": "bitmap"
             },
             {
-                "file": "images/cloudy.png",
-                "name": "ICON_CLOUDY",
+                "file": "images/error.png",
+                "name": "ICON_ERROR",
                 "targetPlatforms": null,
                 "type": "bitmap"
             },

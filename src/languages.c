@@ -13,6 +13,7 @@ russian 4
 */
 
 // Days of the week
+<<<<<<< HEAD
 const char* dayNames[8][7] = {
 	{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"},
 	{"Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"},
