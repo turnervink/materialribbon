@@ -67,16 +67,6 @@ static const GPathInfo DIAG_DROP_POINTS = {
 	.points = (GPoint []) {{-20, 117}, {-1, 160}, {180, 160}, {180, 117}}
 };
 
-/*const int BATT_ICONS[] = {
-	RESOURCE_ID_BATT_LOW,			// 0
-	RESOURCE_ID_BATT_20,			// 1
-	RESOURCE_ID_BATT_40,			// 2
-	RESOURCE_ID_BATT_60,			// 3
-	RESOURCE_ID_BATT_80,			// 4
-	RESOURCE_ID_BATT_FULL,		// 5
-	RESOURCE_ID_BATT_CHARGING	// 6
-};*/
-
 void on_animation_stopped(Animation *anim, bool finished, void *context) {
     //Free the memory used by the Animation
     property_animation_destroy((PropertyAnimation*) anim);
@@ -185,22 +175,6 @@ void batt_handler(BatteryChargeState state) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "Destroying batt_icon in batt_handler");
 		gbitmap_destroy(batt_icon);
 	}
-	
-	/*if (charging) {
-		batt_icon = gbitmap_create_with_resource(BATT_ICONS[6]);
-	} else if (pct <= 10) {
-		batt_icon = gbitmap_create_with_resource(BATT_ICONS[0]);
-	} else if (pct <= 20) {
-		batt_icon = gbitmap_create_with_resource(BATT_ICONS[1]);
-	} else if (pct <= 40) {
-		batt_icon = gbitmap_create_with_resource(BATT_ICONS[2]);
-	} else if (pct <= 60) {
-		batt_icon = gbitmap_create_with_resource(BATT_ICONS[3]);
-	} else if (pct <= 80) {
-		batt_icon = gbitmap_create_with_resource(BATT_ICONS[4]);
-	} else if (pct <= 100) {
-		batt_icon = gbitmap_create_with_resource(BATT_ICONS[5]);
-	}*/
 
 	static char batt_buffer[10];
 	
@@ -215,27 +189,22 @@ void batt_handler(BatteryChargeState state) {
 		layer_set_hidden(text_layer_get_layer(battpct_layer), true);
 	}
 	
+	// Set icon to the proper position on the spritesheet
 	if (charging) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(70, 0, 14, 26));
 		text_layer_set_text(battpct_layer, "CHRG");
 	} else if (pct <= 10) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(84, 0, 14, 26));
-		//text_layer_set_text(battpct_layer, "10%");
 	} else if (pct <= 20) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(0, 0, 14, 26));
-		//text_layer_set_text(battpct_layer, "20%");
 	} else if (pct <= 40) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(14, 0, 14, 26));
-		//text_layer_set_text(battpct_layer, "40%");
 	} else if (pct <= 60) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(28, 0, 14, 26));
-		//text_layer_set_text(battpct_layer, "60%");
 	} else if (pct <= 80) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(42, 0, 14, 26));
-		//text_layer_set_text(battpct_layer, "80%");
 	} else if (pct <= 100) {
 		batt_icon = gbitmap_create_as_sub_bitmap(batt_sprites, GRect(56, 0, 14, 26));
-		//text_layer_set_text(battpct_layer, "100%");
 	}
 	
 	layer_mark_dirty(batt_layer);
@@ -387,6 +356,7 @@ void pick_colours() {
 static void draw_horz_rect(Layer *layer, GContext *ctx) {
 	graphics_context_set_antialiased(ctx, true);
 	
+	// Old bar drawn as GPath
 	/*if (colourscheme == 0) {
 		graphics_context_set_fill_color(ctx, GColorFromRGB(245, 124, 0));
 		gpath_draw_filled(ctx, horz_drop);
@@ -420,7 +390,7 @@ static void draw_horz_rect(Layer *layer, GContext *ctx) {
 			if (steps >= 10000) {
 				graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
 			} else {
-				graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, steps / steps_per_px, 42), 0, GCornerNone); // <-- Change this to use the horz shadow as step goal, start at x = 31 for Chalk
+				graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, steps / steps_per_px, 42), 0, GCornerNone);
 			}
 		} else {
 			graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
@@ -439,26 +409,6 @@ static void draw_horz_rect(Layer *layer, GContext *ctx) {
 static void draw_diag_rect(Layer *layer, GContext *ctx) {
 	graphics_context_set_antialiased(ctx, true);
 	
-	/*if (colourscheme == 0) {
-		graphics_context_set_fill_color(ctx, GColorFromRGB(13, 71, 161));
-		gpath_draw_filled(ctx, diag_drop);
-
-		graphics_context_set_fill_color(ctx, GColorFromRGB(33, 150, 243));
-		gpath_draw_filled(ctx, diag_rect);
-
-		graphics_context_set_stroke_color(ctx, GColorFromRGB(13, 71, 161));
-		gpath_draw_outline(ctx, diag_rect);
-	} else if (colourscheme == 1) {
-		graphics_context_set_fill_color(ctx, GColorFromRGB(13, 71, 161));
-		gpath_draw_filled(ctx, diag_drop);
-
-		graphics_context_set_fill_color(ctx, GColorFromRGB(25, 118, 210));
-		gpath_draw_filled(ctx, diag_rect);
-
-		graphics_context_set_stroke_color(ctx, GColorFromRGB(13, 71, 161));
-		gpath_draw_outline(ctx, diag_rect);
-	}*/
-	
 	graphics_context_set_fill_color(ctx, diagdrop);
 	gpath_draw_filled(ctx, diag_drop);
 
@@ -476,15 +426,6 @@ static void draw_step_bar(Layer *layer, GContext *ctx) {
 	#ifdef SHOW_DRAW_LOGS
 	APP_LOG(APP_LOG_LEVEL_INFO, "Steps/goal in draw step bar %d", steps / goal);
 	#endif
-	//steps = 5000;
-	
-	//graphics_draw_rect(ctx, GRect(2, 113, 82, 5));
-	/*graphics_context_set_fill_color(ctx, stepsdrop);
-	graphics_fill_rect(ctx, GRect(2, 113, 80, 5), 3, GCornersAll);
-	graphics_context_set_fill_color(ctx, stepsfore);
-	graphics_fill_rect(ctx, GRect(2, 113, steps / goal, 5), 3, GCornersAll);*/
-	
-	//graphics_fill_rect(ctx, GRect(-1, 120, 181, 35), 0, GCornerNone);
 }
 
 static void draw_batt(Layer *layer, GContext *ctx) {
@@ -492,7 +433,6 @@ static void draw_batt(Layer *layer, GContext *ctx) {
 	APP_LOG(APP_LOG_LEVEL_INFO, "Drawing battery icon");
 	#endif
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
-	//replace_gbitmap_color(GColorBlack, gcolor_legible_over(horz), batt_icon, NULL); // Pick white or black for icon based on colour scheme
 	graphics_draw_bitmap_in_rect(ctx, batt_icon, layer_get_bounds(batt_layer));
 }
 
@@ -501,7 +441,6 @@ static void draw_bt(Layer *layer, GContext *ctx) {
 	APP_LOG(APP_LOG_LEVEL_INFO, "Drawing BT icon");
 	#endif
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
-	//bt_icon = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CONNECTED);
 	if (bluetooth_connection_service_peek()) {
 		bt_icon = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CONNECTED);
 	} else {
@@ -554,7 +493,6 @@ static void main_window_load(Window *window) {
 	
 	// Set up time & date (Commented frames are final positions)
 	time_layer = text_layer_create(GRect(2, 0, bounds.size.w, bounds.size.h));
-	//text_layer_set_text_color(time_layer, GColorWhite);
 	text_layer_set_background_color(time_layer, GColorClear);
 	time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_BLACK_42));
 	text_layer_set_font(time_layer, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
@@ -564,7 +502,6 @@ static void main_window_load(Window *window) {
 	layer_set_frame(text_layer_get_layer(time_layer), GRect(0 - time_size.w, PBL_IF_ROUND_ELSE(20, 0), time_size.w, time_size.h));
 	
 	date_layer = text_layer_create(GRect(2, time_size.h + 3, bounds.size.w, bounds.size.h));
-	//text_layer_set_text_color(date_layer, GColorWhite);
 	text_layer_set_background_color(date_layer, GColorClear);
 	date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_24));
 	text_layer_set_font(date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
@@ -619,8 +556,6 @@ static void main_window_load(Window *window) {
 	weathericon_layer = layer_create(GRect(PBL_IF_ROUND_ELSE(160, 122), 73, 20, 23));
 	layer_set_update_proc(weathericon_layer, draw_weathericon);
 	
-	
-	//temp_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(130, 121), 75, 144, 168));
 	#ifdef PBL_ROUND 
 		temp_layer = text_layer_create(GRect(125, 95, 40, 25));
 	#else
@@ -701,10 +636,6 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 	update_time();
 	
 	if(tick_time->tm_min % weatherupdatetime == 0) {
-			if (weather_icon != NULL) {
-				//APP_LOG(APP_LOG_LEVEL_INFO, "Destroying weather icon in tick_handler");
-				//gbitmap_destroy(weather_icon);
-			}
 			if (show_weather == 1) {
 				update_weather();
 			}

@@ -126,7 +126,6 @@ Pebble.addEventListener('webviewclosed', function(e) {
       vibeConnect: configData.vibeConnect ? 1 : 0,
       langSel: configData.langSel,
 			colourScheme: parseInt(configData.colourScheme),
-			//colourScheme: 5
 			updateTime: parseInt(configData.updateTime),
 			battNumber: parseInt(configData.battNumber),
 			showSteps: configData.showSteps ? 1 : 0,

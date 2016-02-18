@@ -44,11 +44,10 @@ static void weather_ended() {
 
 void update_weather() {
 	// Show the loading icon, request the weather, and start the timeout
-	//weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING);
+	//weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING); // Don't show the loading icon unless we're updating on launch
 	layer_mark_dirty(weathericon_layer);
 	GRect icon = gbitmap_get_bounds(weather_icon);
 	layer_set_frame(weathericon_layer, GRect(PBL_IF_ROUND_ELSE(165 - (icon.size.w / 2), 133 - (icon.size.w / 2)), 73, 20, 23));
-	//text_layer_set_text(temp_layer, NULL);
 	
 	// Begin dictionary
 	DictionaryIterator *iter;
@@ -160,16 +159,8 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	
 	if (use_celsius == 1) {
 		text_layer_set_text(temp_layer, tempc_buffer);
-		//text_layer_set_text(temp_layer, "13°");
-		//GSize temp_size = text_layer_get_content_size(temp_layer);
-		//APP_LOG(APP_LOG_LEVEL_INFO, "Width is %d", temp_size.w);
-		//layer_set_frame(text_layer_get_layer(temp_layer), GRect(PBL_IF_ROUND_ELSE(145 - (temp_size.w / 2), 123 - (temp_size.w / 2)), 95, 30, 30));
 	} else {
 		text_layer_set_text(temp_layer, temp_buffer);
-		//text_layer_set_text(temp_layer, "13°");
-		//GSize temp_size = text_layer_get_content_size(temp_layer);
-		//APP_LOG(APP_LOG_LEVEL_INFO, "Width is %d", temp_size.w);
-		//layer_set_frame(text_layer_get_layer(temp_layer), GRect(PBL_IF_ROUND_ELSE(145 - (temp_size.w / 2), 123 - (temp_size.w / 2)), 95, 30, 30));
 	}
 	
 	if (show_weather == 0) {
