@@ -16,6 +16,8 @@
 #define KEY_SHOW_STEPS 12
 #define KEY_STEP_GOAL 13
 
+//#define DEMO_MODE
+
 AppTimer *weather_timeout, *ready_timeout;
 GBitmap *weather_icon;
 TextLayer *temp_layer;

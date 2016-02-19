@@ -121,7 +121,11 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		#endif
 		cancel_weather_timeout();
 		
+		#ifdef DEMO_MODE
+		snprintf(temp_buffer, sizeof(temp_buffer), "13°");
+		#else
 		snprintf(temp_buffer, sizeof(temp_buffer), "%d°", (int)temp_tup->value->int32);
+		#endif
 	}
 	
 	if (tempc_tup) {
@@ -130,7 +134,11 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		#endif
 		cancel_weather_timeout();
 		
+		#ifdef DEMO_MODE
+		snprintf(tempc_buffer, sizeof(tempc_buffer), "13°");
+		#else
 		snprintf(tempc_buffer, sizeof(tempc_buffer), "%d°", (int)tempc_tup->value->int32);
+		#endif
 	}
 	
 	if (usecelsius_tup) {
@@ -187,8 +195,16 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		
 		time_t temp = time(NULL);
 		struct tm *tick_time = localtime(&temp);
+		
+		#ifdef DEMO_MODE
+		int hour = 10;
+		#else
 		int hour = tick_time->tm_hour;
-		//int hour = 10;
+		#endif
+		
+		#ifdef DEMO_MODE 
+		weatherid = 800;
+		#endif
 		
 		// Pick the right icon
 		if ((weatherid % 900) < 100) {

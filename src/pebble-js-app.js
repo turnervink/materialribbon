@@ -104,7 +104,7 @@ Pebble.addEventListener('appmessage',
 //===== Config =====//
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'http://turnervink.github.io/materialribbon-config/';
+  var url = 'http://turnervink.github.io/materialribbon/';
 
   console.log('Showing configuration page: ' + url);
 

@@ -114,7 +114,9 @@ void update_time() {
 		snprintf(time_buffer, sizeof(time_buffer), "%d:%s", hour, min_buffer); // Combine our interger hour and strftime min
   }
 
+	#ifndef DEMO_MODE
 	text_layer_set_text(time_layer, time_buffer); // Display the time info
+	#endif
 
 	int day = tick_time->tm_mday;
 	int weekday = tick_time->tm_wday; // Get current weekday as an integer (0 is Sunday)
@@ -122,7 +124,9 @@ void update_time() {
 	// Select the correct strings from languages.c and write to buffer along with date
 	snprintf(date_buffer, sizeof(date_buffer), "%s %d", dayNames[lang][weekday], day);
 
+	#ifndef DEMO_MODE
 	text_layer_set_text(date_layer, date_buffer); // Display the date info
+	#endif
 }
 
 static void init_animations() {
@@ -316,8 +320,8 @@ void pick_colours() {
 		diagdrop = GColorFromRGB(85, 255, 0);
 		stepsfore = diag;
 		stepsdrop = diagdrop;
-		text_layer_set_text_color(time_layer, GColorWhite);
-		text_layer_set_text_color(date_layer, GColorWhite);
+		text_layer_set_text_color(time_layer, GColorBlack);
+		text_layer_set_text_color(date_layer, GColorBlack);
 		text_layer_set_text_color(temp_layer, GColorBlack);
 		window_set_background_color(main_window, GColorFromRGB(255, 85, 85));
 		usewhiteicons = 0;
@@ -383,7 +387,10 @@ static void draw_horz_rect(Layer *layer, GContext *ctx) {
 	GRect bounds = layer_get_bounds(window_get_root_layer(main_window));
 
 	graphics_context_set_fill_color(ctx, horzdrop);
-
+	
+	#ifdef DEMO_MODE 
+	graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
+	#else
 	if (show_step_goal) {
 		if (steps_available) {
 			if (steps >= 10000) {
@@ -397,6 +404,7 @@ static void draw_horz_rect(Layer *layer, GContext *ctx) {
 	} else {
 		graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
 	}
+	#endif
 
 	graphics_context_set_fill_color(ctx, horz);
 	gpath_draw_filled(ctx, horz_rect);
@@ -495,7 +503,11 @@ static void main_window_load(Window *window) {
 	text_layer_set_background_color(time_layer, GColorClear);
 	time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_BLACK_42));
 	text_layer_set_font(time_layer, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS));
+	#ifdef DEMO_MODE 
+	text_layer_set_text(time_layer, "12:35");
+	#else
 	text_layer_set_text(time_layer, "00:00");
+	#endif
 	GSize time_size = text_layer_get_content_size(time_layer);
 	//layer_set_frame(text_layer_get_layer(time_layer), GRect(PBL_IF_ROUND_ELSE(27, 7), PBL_IF_ROUND_ELSE(20, 0), time_size.w, time_size.h));
 	layer_set_frame(text_layer_get_layer(time_layer), GRect(0 - time_size.w, PBL_IF_ROUND_ELSE(20, 0), time_size.w, time_size.h));
@@ -504,7 +516,11 @@ static void main_window_load(Window *window) {
 	text_layer_set_background_color(date_layer, GColorClear);
 	date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_24));
 	text_layer_set_font(date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
+	#ifdef DEMO_MODE 
+	text_layer_set_text(date_layer, "Mon 1");
+	#else
 	text_layer_set_text(date_layer, "Mon 00");
+	#endif
 	GSize date_size = text_layer_get_content_size(date_layer);
 	//layer_set_frame(text_layer_get_layer(date_layer), GRect(PBL_IF_ROUND_ELSE(29, 9), PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h));
 	layer_set_frame(text_layer_get_layer(date_layer), GRect(0 - time_size.w, PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h));
