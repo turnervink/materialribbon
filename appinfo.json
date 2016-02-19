@@ -27,6 +27,97 @@
     "resources": {
         "media": [
             {
+                "file": "images/unknown.png",
+                "name": "ICON_UNKNOWN",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/thunderstorm.png",
+                "name": "ICON_THUNDERSTORM",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/sun.png",
+                "name": "ICON_SUN",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/snow.png",
+                "name": "ICON_SNOW",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/rain.png",
+                "name": "ICON_RAIN",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/partly-cloudy.png",
+                "name": "ICON_PARTLY_CLOUDY",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/night.png",
+                "name": "ICON_NIGHT",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/materialribbonicon.png",
+                "menuIcon": true,
+                "name": "IMAGE_MENUICON",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/loading.png",
+                "name": "ICON_LOADING",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/fog.png",
+                "name": "ICON_FOG",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/error.png",
+                "name": "ICON_ERROR",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/cloudy.png",
+                "name": "ICON_CLOUDY",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/cloudy-night.png",
+                "name": "ICON_CLOUDY_NIGHT",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/bt_disconnected.png",
+                "name": "IMAGE_DISCONNECTED",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/bt_connected.png",
+                "name": "IMAGE_CONNECTED",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
                 "file": "images/batteryspriteswhite.png",
                 "name": "IMAGE_BATT_SPRITES_WHITE",
                 "targetPlatforms": null,
@@ -39,107 +130,16 @@
                 "type": "bitmap"
             },
             {
-                "file": "fonts/Roboto-Black.ttf",
-                "name": "FONT_ROBOTO_BLACK_42",
-                "targetPlatforms": null,
-                "type": "font"
-            },
-            {
                 "file": "fonts/Roboto-Regular.ttf",
                 "name": "FONT_ROBOTO_24",
                 "targetPlatforms": null,
                 "type": "font"
             },
             {
-                "file": "images/bt_connected.png",
-                "name": "IMAGE_CONNECTED",
+                "file": "fonts/Roboto-Black.ttf",
+                "name": "FONT_ROBOTO_BLACK_42",
                 "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/bt_disconnected.png",
-                "name": "IMAGE_DISCONNECTED",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/cloudy-night.png",
-                "name": "ICON_CLOUDY_NIGHT",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/error.png",
-                "name": "ICON_ERROR",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/fog.png",
-                "name": "ICON_FOG",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/loading.png",
-                "name": "ICON_LOADING",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/night.png",
-                "name": "ICON_NIGHT",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/partly-cloudy.png",
-                "name": "ICON_PARTLY_CLOUDY",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/rain.png",
-                "name": "ICON_RAIN",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/snow.png",
-                "name": "ICON_SNOW",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/sun.png",
-                "name": "ICON_SUN",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/thunderstorm.png",
-                "name": "ICON_THUNDERSTORM",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/unknown.png",
-                "name": "ICON_UNKNOWN",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/cloudy.png",
-                "name": "ICON_CLOUDY",
-                "targetPlatforms": null,
-                "type": "bitmap"
-            },
-            {
-                "file": "images/materialribbonicon.png",
-                "menuIcon": true,
-                "name": "IMAGE_MENUICON",
-                "targetPlatforms": null,
-                "type": "bitmap"
+                "type": "font"
             }
         ]
     },
