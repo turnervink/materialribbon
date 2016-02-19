@@ -129,6 +129,12 @@
                 "type": "bitmap"
             },
             {
+                "file": "images/cloudy.png",
+                "name": "ICON_CLOUDY",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
                 "file": "images/materialribbonicon.png",
                 "menuIcon": true,
                 "name": "IMAGE_MENUICON",
