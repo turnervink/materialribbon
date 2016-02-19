@@ -2,9 +2,15 @@
 by Turner Vink<br>
 www.turnervink.com
 
+![basalt](screenshots/basalt.gif "Basalt")
+![chalk](screenshots/chalk.gif "Chalk")
+
 * Inspired by Material Design
 * Weather, battery, and Bluetooth information using Material icons
-* Supports English, French, Spanish, and German
+* Supports English, French, Spanish, German, Russian, Italian, Portuguese, and Ukrainian
+* Colour schemes
+* View battery as an icon or a percentage
+* Set a step goal and view progress as the shadow of the horizontal bar
 
 Weather icons from <a href=http://ionicons.com/>Ionicons</a>
 
