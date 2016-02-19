@@ -20,29 +20,29 @@ var xhrRequest = function (url, type, callback) {
 function locationSuccess(pos) {
   // Construct URL
   var url = 'http://api.openweathermap.org/data/2.5/weather?lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude + '&appid=2874bea34ea1f91820fa07af69939eea';
-  
+
   console.log("Lat is " + pos.coords.latitude);
   console.log("Lon is " + pos.coords.longitude);
   console.log('URL is ' + url);
 
   // Send request to OpenWeatherMap
-  xhrRequest(url, 'GET', 
+  xhrRequest(url, 'GET',
     function(responseText) {
       console.log("Parsing JSON");
-      
+
       var json = JSON.parse(responseText); // Parse JSON response
       console.log(JSON.parse(responseText));
 
       var temperature = Math.round(((json.main.temp - 273.15) * 1.8) + 32); // Convert from Kelvin to Fahrenheit
       console.log("Temperature in Fahrenheit is " + temperature);
-      
+
       var temperaturec = Math.round(json.main.temp - 273.15); // Convert from Kelvin to Celsius
       console.log("Temperature in Celsius is " + temperaturec);
 
       // Conditions
-      var id = json.weather[0].id;      
+      var id = json.weather[0].id;
       console.log("Weather ID is " + id);
-      
+
       // Assemble weather info into dictionary
       var dictionary = {
         "KEY_TEMP": temperature,
@@ -61,7 +61,7 @@ function locationSuccess(pos) {
 					console.log(e);
         }
       );
-    }      
+    }
   );
 }
 
@@ -93,13 +93,12 @@ Pebble.addEventListener('appmessage',
   function(e) {
     console.log('AppMessage received!');
     console.log('Message contents: ' + JSON.stringify(e.payload));
-		console.log(e.payload.KEY_WEATHERID);
 
     if (e.payload.KEY_WEATHERID === 0) { // If KEY_CONDITIONS exists in the appmessage
       console.log('Fetching weather');
       getWeather(); // Fetch the weather
     }
-  }                     
+  }
 );
 
 //===== Config =====//
@@ -119,14 +118,18 @@ Pebble.addEventListener('webviewclosed', function(e) {
 
   if (configData.useCelsius >= 0) { // If we have received the correct data (not sure why we wouldn't, but who knows?)
     // Send all keys to Pebble
-		console.log("Sending config dict");
-		console.log("showWeather: " + configData.showWeather);
+		console.log("Sending config settings");
     Pebble.sendAppMessage({
       useCelsius: configData.useCelsius ? 1 : 0,
 			showWeather: configData.showWeather ? 1 : 0,
       vibeDisconnect: configData.vibeDisconnect ? 1 : 0,
       vibeConnect: configData.vibeConnect ? 1 : 0,
-      langSel: configData.langSel
+      langSel: configData.langSel,
+			colourScheme: parseInt(configData.colourScheme),
+			updateTime: parseInt(configData.updateTime),
+			battNumber: parseInt(configData.battNumber),
+			showSteps: configData.showSteps ? 1 : 0,
+			stepGoal: parseInt(configData.stepGoal)
     }, function(e) {
       console.log('Send successful!');
 			console.log(e);
