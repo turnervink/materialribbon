@@ -1,6 +1,7 @@
 var Clay = require('clay');
 var clayConfig = require('config');
-var clay = new Clay(clayConfig);
+var clay = new Clay(clayConfig, null, { AutoHandleEvents: false});
+var city = "";
 
 var xhrRequest = function (url, type, callback) {
   var xhr = new XMLHttpRequest();
@@ -22,12 +23,25 @@ var xhrRequest = function (url, type, callback) {
 };
 
 function locationSuccess(pos) {
-  // Construct URL
-  var url = 'http://api.openweathermap.org/data/2.5/weather?lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude + '&appid=2874bea34ea1f91820fa07af69939eea';
+	var url;
+	
+	if (pos !== undefined) {
+		console.log("Using pos to create URL");
+		// Construct URL
+		url = 'http://api.openweathermap.org/data/2.5/weather?lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude + '&appid=2874bea34ea1f91820fa07af69939eea';
 
-  console.log("Lat is " + pos.coords.latitude);
-  console.log("Lon is " + pos.coords.longitude);
-  console.log('URL is ' + url);
+		console.log("Lat is " + pos.coords.latitude);
+		console.log("Lon is " + pos.coords.longitude);
+		console.log('URL is ' + url);
+	} else {
+		console.log("Using city to create URL");
+		// Construct URL
+  	url = 'http://api.openweathermap.org/data/2.5/weather?&q=' + city + '&appid=2874bea34ea1f91820fa07af69939eea';
+	
+		console.log('URL is ' + url);
+	}
+	
+  
 
   // Send request to OpenWeatherMap
   xhrRequest(url, 'GET',
@@ -36,6 +50,9 @@ function locationSuccess(pos) {
 
       var json = JSON.parse(responseText); // Parse JSON response
       console.log(JSON.parse(responseText));
+			
+			var cityinresponse = json.main.city;
+			console.log("City in response is" + cityinresponse);
 
       var temperature = Math.round(((json.main.temp - 273.15) * 1.8) + 32); // Convert from Kelvin to Fahrenheit
       console.log("Temperature in Fahrenheit is " + temperature);
@@ -74,15 +91,22 @@ function locationError(err) {
 }
 
 function getWeather() {
-  navigator.geolocation.getCurrentPosition(
-    locationSuccess,
-    locationError,
-    {timeout: 15000, maximumAge: 60000}
-  );
+	if (city === "") {
+		console.log("No city defined, using GPS position");
+		navigator.geolocation.getCurrentPosition(
+			locationSuccess,
+			locationError,
+			{timeout: 15000, maximumAge: 60000}
+		);
+	} else {
+		console.log("Fetching weather for " + city);
+		locationSuccess();
+	}
 }
 
 Pebble.addEventListener('ready', function() {
   console.log('PebbleKit JS Ready!');
+	city = localStorage.city;
 
   Pebble.sendAppMessage({'0': 0
 	}, function(e) {
@@ -106,6 +130,39 @@ Pebble.addEventListener('appmessage',
 );
 
 //===== Config =====//
+
+Pebble.addEventListener('showConfiguration', function(e) {
+	console.log("Showing configuration page");
+  Pebble.openURL(clay.generateUrl());
+});
+
+Pebble.addEventListener('webviewclosed', function(e) {
+  if (e && !e.response) { 
+		console.log("No response from config page!");
+    return; 
+  }
+	
+	console.log("Configuration page returned: " + e.response);
+
+  // Get the keys and values from each config item
+  var dict = clay.getSettings(e.response);
+	var response = JSON.parse(e.response);
+	console.log(dict);
+	
+	city = response.cityName;
+	console.log("Entered city is " + city);
+	localStorage.city = city;
+
+  // Send settings values to watch side
+  Pebble.sendAppMessage(dict, function(e) {
+    console.log('Sent config data to Pebble');
+  }, function(e) {
+    console.log('Failed to send config data!');
+    console.log(JSON.stringify(e));
+  });
+});
+
+//===== Old Config=====//
 
 /*Pebble.addEventListener('showConfiguration', function() {
   var url = 'http://turnervink.github.io/materialribbon-config/';

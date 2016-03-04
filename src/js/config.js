@@ -1,4 +1,21 @@
 module.exports = [
+	{
+		"type": "section",
+		"items": [
+			{
+				"type": "heading",
+				"id": "main-heading",
+				"defaultValue": "Material Ribbon",
+				"size": 1
+			},
+			{
+				"type": "heading",
+				"id": "dev-heading",
+				"defaultValue": "by Turner Vink",
+				"size": 6
+			},
+		]
+	},
 	
 	{
 		"type": "section",
@@ -7,7 +24,7 @@ module.exports = [
 				"type": "heading",
 				"id": "localization-heading",
 				"defaultValue": "Localization",
-				"size": 5
+				"size": 4
 			},
 			{
 				"type": "select",
@@ -59,7 +76,7 @@ module.exports = [
 				"type": "heading",
 				"id": "appearance-heading",
 				"defaultValue": "Appearance",
-				"size": 5
+				"size": 4
 			},
 			{
 				"type": "select",
@@ -119,7 +136,7 @@ module.exports = [
 				"type": "heading",
 				"id": "weather-heading",
 				"defaultValue": "Weather",
-				"size": 5
+				"size": 4
 			},
 			{
 				"type": "toggle",
@@ -148,6 +165,15 @@ module.exports = [
 						"value": "30"
 					}
 				]
+			},
+			{
+				"type": "input",
+				"appKey": "cityName",
+				"defaultValue": "",
+				"label": "City",
+				"attributes": {
+					"placeholder": "",
+			}
 			}
 		]
 	},
@@ -159,7 +185,7 @@ module.exports = [
 				"type": "heading",
 				"id": "health-heading",
 				"defaultValue": "Health",
-				"size": 5
+				"size": 4
 			},
 			{
 				"type": "toggle",
@@ -209,7 +235,7 @@ module.exports = [
 				"type": "heading",
 				"id": "bluetooth-heading",
 				"defaultValue": "Bluetooth Status",
-				"size": 5
+				"size": 4
 			},
 			{
 				"type": "toggle",

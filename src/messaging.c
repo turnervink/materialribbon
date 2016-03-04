@@ -3,7 +3,7 @@
 #include "languages.h"
 #include "gbitmap_color_palette_manipulator.h"
 
-#define SHOW_RECEIVED_LOGS
+//#define SHOW_RECEIVED_LOGS
 
 const int WEATHER_ICONS[] = {
 	RESOURCE_ID_ICON_UNKNOWN,				// 0
@@ -25,8 +25,10 @@ void init_appmessage() {
 	app_message_register_outbox_sent(outbox_sent_callback);
 	
 	// Create buffers based on what we are sending/receiving
-	int buffer_in = dict_calc_buffer_size(14, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t), sizeof(char), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(char), sizeof(char), sizeof(char), sizeof(int8_t), sizeof(char));
+	int buffer_in = dict_calc_buffer_size(15, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t), sizeof(char), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(char), sizeof(char), sizeof(char), sizeof(int8_t), sizeof(char), sizeof(char)) + 10;
 	int buffer_out = dict_calc_buffer_size(1, sizeof(int32_t));
+	APP_LOG(APP_LOG_LEVEL_INFO, "buffer_in is %d", buffer_in);
+	APP_LOG(APP_LOG_LEVEL_INFO, "buffer_out is %d", buffer_out);
 	app_message_open(buffer_in, buffer_out);
 }
 
@@ -43,6 +45,8 @@ static void weather_ended() {
 }
 
 void update_weather() {
+	//char savedcity = city_buffer;
+	
 	// Show the loading icon, request the weather, and start the timeout
 	//weather_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_LOADING); // Don't show the loading icon unless we're updating on launch
 	layer_mark_dirty(weathericon_layer);
@@ -100,6 +104,7 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	Tuple *battaspct_tup = dict_find(iter, KEY_BATT_AS_NUM); // cstring
 	Tuple *showsteps_tup = dict_find(iter, KEY_SHOW_STEPS); // int8
 	Tuple *stepgoal_tup = dict_find(iter, KEY_STEP_GOAL); // cstring
+	Tuple *city_tup = dict_find(iter, KEY_CITY_NAME); // cstring
 	
 	if (ready_tup) {
 		int status = (int)ready_tup->value->int32;
@@ -382,20 +387,26 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		if (strcmp(stepgoal_tup->value->cstring, "10000") == 0) {
 			stepgoal = 10000;
 		} else if (strcmp(stepgoal_tup->value->cstring, "9000") == 0) {
-			weatherupdatetime = 9000;
+			stepgoal = 9000;
 		} else if (strcmp(stepgoal_tup->value->cstring, "8000") == 0) {
-			weatherupdatetime = 8000;
+			stepgoal = 8000;
 		} else if (strcmp(stepgoal_tup->value->cstring, "7000") == 0) {
-			weatherupdatetime = 7000;
+			stepgoal = 7000;
 		} else if (strcmp(stepgoal_tup->value->cstring, "6000") == 0) {
-			weatherupdatetime = 6000;
+			stepgoal = 6000;
 		} else if (strcmp(stepgoal_tup->value->cstring, "5000") == 0) {
-			weatherupdatetime = 5000;
+			stepgoal = 5000;
 		}
 		
   	//stepgoal = stepgoal_tup->value->int16;
 		
+		APP_LOG(APP_LOG_LEVEL_INFO, "stepgoal is %d", stepgoal);
 		persist_write_int(KEY_STEP_GOAL, stepgoal);
+	}
+	
+	if (city_tup) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_CITY_NAME received!");
+		APP_LOG(APP_LOG_LEVEL_INFO, "City received in appmessage is: %s", city_tup->value->cstring);
 	}
 }
 
