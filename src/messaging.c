@@ -25,7 +25,7 @@ void init_appmessage() {
 	app_message_register_outbox_sent(outbox_sent_callback);
 	
 	// Create buffers based on what we are sending/receiving
-	int buffer_in = dict_calc_buffer_size(10, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t), sizeof(char), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(char), sizeof(char), sizeof(char), sizeof(int8_t), sizeof(char));
+	int buffer_in = dict_calc_buffer_size(14, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t), sizeof(char), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(char), sizeof(char), sizeof(char), sizeof(int8_t), sizeof(char));
 	int buffer_out = dict_calc_buffer_size(1, sizeof(int32_t));
 	app_message_open(buffer_in, buffer_out);
 }
