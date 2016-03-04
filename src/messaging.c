@@ -25,7 +25,7 @@ void init_appmessage() {
 	app_message_register_outbox_sent(outbox_sent_callback);
 	
 	// Create buffers based on what we are sending/receiving
-	int buffer_in = dict_calc_buffer_size(10, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t), sizeof(char), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int16_t));
+	int buffer_in = dict_calc_buffer_size(10, sizeof(char), sizeof(int32_t), sizeof(int32_t), sizeof(int32_t), sizeof(char), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(int8_t), sizeof(char), sizeof(char), sizeof(char), sizeof(int8_t), sizeof(char));
 	int buffer_out = dict_calc_buffer_size(1, sizeof(int32_t));
 	app_message_open(buffer_in, buffer_out);
 }
@@ -95,11 +95,11 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 	Tuple *showweather_tup = dict_find(iter, KEY_SHOW_WEATHER); //int8
 	Tuple *vibeconnect_tup = dict_find(iter, KEY_VIBE_ON_CONNECT); // int8
 	Tuple *vibedisconnect_tup = dict_find(iter, KEY_VIBE_ON_DISCONNECT); // int8
-	Tuple *colourscheme_tup = dict_find(iter, KEY_COLOUR_SCHEME); // int8
-	Tuple *updatetime_tup = dict_find(iter, KEY_UPDATE_TIME); // int8
-	Tuple *battaspct_tup = dict_find(iter, KEY_BATT_AS_NUM); // int8
+	Tuple *colourscheme_tup = dict_find(iter, KEY_COLOUR_SCHEME); // cstring
+	Tuple *updatetime_tup = dict_find(iter, KEY_UPDATE_TIME); // cstring
+	Tuple *battaspct_tup = dict_find(iter, KEY_BATT_AS_NUM); // cstring
 	Tuple *showsteps_tup = dict_find(iter, KEY_SHOW_STEPS); // int8
-	Tuple *stepgoal_tup = dict_find(iter, KEY_STEP_GOAL); // int16
+	Tuple *stepgoal_tup = dict_find(iter, KEY_STEP_GOAL); // cstring
 	
 	if (ready_tup) {
 		int status = (int)ready_tup->value->int32;
@@ -334,7 +334,14 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		#ifdef SHOW_RECEIVED_LOGS
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_UPDATE_TIME received!");
 		#endif
-		weatherupdatetime = updatetime_tup->value->int8;
+		
+		if (strcmp(updatetime_tup->value->cstring, "30") == 0) {
+			weatherupdatetime = 30;
+		} else if (strcmp(updatetime_tup->value->cstring, "60") == 0) {
+			weatherupdatetime = 60;
+		}
+		
+		//weatherupdatetime = updatetime_tup->value->int8;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Weather update time is %d", weatherupdatetime);
 		persist_write_int(KEY_UPDATE_TIME, weatherupdatetime);
 	}
@@ -343,8 +350,14 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		#ifdef SHOW_RECEIVED_LOGS
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_BATT_AS_NUM received!");
 		#endif
+		
+		if (strcmp(battaspct_tup->value->cstring, "icon") == 0) {
+			batt_as_percent = 0;
+		} else if (strcmp(battaspct_tup->value->cstring, "number") == 0) {
+			batt_as_percent = 1;
+		}
 
-  	batt_as_percent = battaspct_tup->value->int8;
+  	//batt_as_percent = battaspct_tup->value->int8;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Battery display is %d", batt_as_percent);
 
   	persist_write_int(KEY_BATT_AS_NUM, batt_as_percent);
@@ -365,7 +378,22 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		#ifdef SHOW_RECEIVED_LOGS
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_STEP_GOAL received!");
 		#endif
-  	stepgoal = stepgoal_tup->value->int16;
+		
+		if (strcmp(stepgoal_tup->value->cstring, "10000") == 0) {
+			stepgoal = 10000;
+		} else if (strcmp(stepgoal_tup->value->cstring, "9000") == 0) {
+			weatherupdatetime = 9000;
+		} else if (strcmp(stepgoal_tup->value->cstring, "8000") == 0) {
+			weatherupdatetime = 8000;
+		} else if (strcmp(stepgoal_tup->value->cstring, "7000") == 0) {
+			weatherupdatetime = 7000;
+		} else if (strcmp(stepgoal_tup->value->cstring, "6000") == 0) {
+			weatherupdatetime = 6000;
+		} else if (strcmp(stepgoal_tup->value->cstring, "5000") == 0) {
+			weatherupdatetime = 5000;
+		}
+		
+  	//stepgoal = stepgoal_tup->value->int16;
 		
 		persist_write_int(KEY_STEP_GOAL, stepgoal);
 	}

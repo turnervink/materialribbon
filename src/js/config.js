@@ -92,7 +92,137 @@ module.exports = [
 						"value": "popsicle"
 					}
 				]
+			},
+			{
+				"type": "select",
+				"appKey": "battNumber",
+				"defaultValue": "icon",
+				"label": "Battery Level",
+				"options": [
+					{
+						"label": "As an icon",
+						"value": "icon"
+					},
+					{
+						"label": "As a number",
+						"value": "number"
+					}
+				]
 			}
+		]
+	},
+	
+	{
+		"type": "section",
+		"items": [
+			{
+				"type": "heading",
+				"id": "weather-heading",
+				"defaultValue": "Weather",
+				"size": 5
+			},
+			{
+				"type": "toggle",
+				"appKey": "showWeather",
+				"label": "Show Weather",
+				"defaultValue": true
+			},
+			{
+				"type": "toggle",
+				"appKey": "useCelsius",
+				"label": "Use Celsius",
+				"defaultValue": false
+			},
+			{
+				"type": "select",
+				"appKey": "updateTime",
+				"defaultValue": "60",
+				"label": "Update Frequency",
+				"options": [
+					{
+						"label": "60 minutes",
+						"value": "60"
+					},
+					{
+						"label": "30 minutes",
+						"value": "30"
+					}
+				]
+			}
+		]
+	},
+	
+	{
+		"type": "section",
+		"items": [
+			{
+				"type": "heading",
+				"id": "health-heading",
+				"defaultValue": "Health",
+				"size": 5
+			},
+			{
+				"type": "toggle",
+				"appKey": "showSteps",
+				"label": "Show step goal",
+				"defaultValue": true
+			},
+			{
+				"type": "select",
+				"appKey": "stepGoal",
+				"defaultValue": "10000",
+				"label": "Step goal",
+				"options": [
+					{
+						"label": "10,000",
+						"value": "10000"
+					},
+					{
+						"label": "9,000",
+						"value": "9000"
+					},
+					{
+						"label": "8,000",
+						"value": "8000"
+					},
+					{
+						"label": "7,000",
+						"value": "7000"
+					},
+					{
+						"label": "6,000",
+						"value": "6000"
+					},
+					{
+						"label": "5,000",
+						"value": "5000"
+					}
+				]
+			}
+		]
+	},
+	
+	{
+		"type": "section",
+		"items": [
+			{
+				"type": "heading",
+				"id": "bluetooth-heading",
+				"defaultValue": "Bluetooth Status",
+				"size": 5
+			},
+			{
+				"type": "toggle",
+				"appKey": "vibeConnect",
+				"label": "Vibrate on Bluetooth Reconnect",
+				"defaultValue": true
+			},
+			{
+				"type": "toggle",
+				"appKey": "vibeDisconnect",
+				"label": "Vibrate on Bluetooth Disconnect",
+				"defaultValue": true
+			},
 		]
 	},
 			
