@@ -1,3 +1,7 @@
+var Clay = require('clay');
+var clayConfig = require('config');
+var clay = new Clay(clayConfig);
+
 var xhrRequest = function (url, type, callback) {
   var xhr = new XMLHttpRequest();
   xhr.onload = function () {
@@ -103,7 +107,7 @@ Pebble.addEventListener('appmessage',
 
 //===== Config =====//
 
-Pebble.addEventListener('showConfiguration', function() {
+/*Pebble.addEventListener('showConfiguration', function() {
   var url = 'http://turnervink.github.io/materialribbon-config/';
 
   console.log('Showing configuration page: ' + url);
@@ -138,4 +142,4 @@ Pebble.addEventListener('webviewclosed', function(e) {
 			console.log(e);
     });
   }
-});
+});*/

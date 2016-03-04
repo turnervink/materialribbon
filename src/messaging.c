@@ -3,7 +3,7 @@
 #include "languages.h"
 #include "gbitmap_color_palette_manipulator.h"
 
-//#define SHOW_RECEIVED_LOGS
+#define SHOW_RECEIVED_LOGS
 
 const int WEATHER_ICONS[] = {
 	RESOURCE_ID_ICON_UNKNOWN,				// 0
@@ -309,7 +309,22 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		#ifdef SHOW_RECEIVED_LOGS
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_COLOUR_SCHEME received!");
 		#endif
-		colourscheme = colourscheme_tup->value->int8;
+		
+		if (strcmp(colourscheme_tup->value->cstring, "classic") == 0) {
+			colourscheme = 0;
+		} else if (strcmp(colourscheme_tup->value->cstring, "poptart") == 0) {
+			colourscheme = 1;
+		} else if (strcmp(colourscheme_tup->value->cstring, "lemonsplash") == 0) {
+			colourscheme = 2;
+		} else if (strcmp(colourscheme_tup->value->cstring, "froyo") == 0) {
+			colourscheme = 3;
+		} else if (strcmp(colourscheme_tup->value->cstring, "watermelon") == 0) {
+			colourscheme = 4;
+		} else if (strcmp(colourscheme_tup->value->cstring, "popsicle") == 0) {
+			colourscheme = 5;
+		}
+		
+		//colourscheme = colourscheme_tup->value->int8;
 		APP_LOG(APP_LOG_LEVEL_INFO, "Colour scheme is %d", colourscheme);
 		persist_write_int(KEY_COLOUR_SCHEME, colourscheme);
 		pick_colours();

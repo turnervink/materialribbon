@@ -21,7 +21,7 @@
         "health"
     ],
     "companyName": "Turner Vink",
-    "enableMultiJS": false,
+    "enableMultiJS": true,
     "longName": "Material Ribbon",
     "projectType": "native",
     "resources": {
