@@ -233,23 +233,27 @@ static void bt_handler(bool connected) {
 	layer_mark_dirty(bt_layer);
 }
 
-#ifdef PBL_HEALTH
 static void health_handler(HealthEventType event, void *context) {
 	time_t start = time_start_of_today();
 	time_t end = time(NULL);
 	HealthServiceAccessibilityMask mask = health_service_metric_accessible(HealthMetricStepCount, start, end);
-
-	if (mask & HealthServiceAccessibilityMaskAvailable) {
-		steps_available = true;
-		APP_LOG(APP_LOG_LEVEL_INFO, "Step data available!");
-		steps = health_service_sum_today(HealthMetricStepCount);
-		APP_LOG(APP_LOG_LEVEL_INFO, "Steps: %d", steps);
+	
+	if (mask & HealthServiceAccessibilityMaskNoPermission) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "No Health permissions");
 	} else {
-		steps_available = false;
-		APP_LOG(APP_LOG_LEVEL_INFO, "Step data unavailable");
+		
+		if (mask & HealthServiceAccessibilityMaskAvailable) {
+				//steps_available = true;
+				APP_LOG(APP_LOG_LEVEL_INFO, "Step data available!");
+				steps = health_service_sum_today(HealthMetricStepCount);
+				APP_LOG(APP_LOG_LEVEL_INFO, "Steps: %d", steps);
+		} else {
+				//steps_available = false;
+				APP_LOG(APP_LOG_LEVEL_INFO, "Step data unavailable");
+		}
+		
 	}
 }
-#endif
 
 static void setup_rects(void) {
 	horz_rect = gpath_create(&HORZ_PATH_POINTS);
@@ -380,31 +384,49 @@ static void draw_horz_rect(Layer *layer, GContext *ctx) {
 		gpath_draw_outline(ctx, horz_rect);
 	}*/
 
-	int steps_per_px = stepgoal / PBL_IF_ROUND_ELSE(120, 144); // Divide by 120 for Chalk
-	#ifdef SHOW_DRAW_LOGS
-	APP_LOG(APP_LOG_LEVEL_INFO, "Steps/goal in draw_horz_rect bar %d", steps / steps_per_px);
-	#endif
 	GRect bounds = layer_get_bounds(window_get_root_layer(main_window));
 
 	graphics_context_set_fill_color(ctx, horzdrop);
 	
-	#ifdef DEMO_MODE 
-	graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
-	#else
-	if (show_step_goal) {
-		if (steps_available) {
-			if (steps >= 10000) {
-				graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
+	time_t start = time_start_of_today();
+	time_t end = time(NULL);
+	HealthServiceAccessibilityMask mask = health_service_metric_accessible(HealthMetricStepCount, start, end);
+
+	if (mask & HealthServiceAccessibilityMaskNoPermission) {
+		APP_LOG(APP_LOG_LEVEL_INFO, "No Health permissions");
+	} else { 
+		
+		if (mask & HealthServiceAccessibilityMaskAvailable) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Steps available in draw_horz");
+
+			int steps_per_px = stepgoal / PBL_IF_ROUND_ELSE(120, 144); // Divide by 120 for Chalk
+
+			#ifdef SHOW_DRAW_LOGS
+			APP_LOG(APP_LOG_LEVEL_INFO, "Steps/goal in draw_horz_rect bar %d", steps / steps_per_px);
+			#endif
+
+
+			#ifdef DEMO_MODE 
+			graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
+			#else
+			if (show_step_goal) {
+
+				if (steps >= 10000) {
+					graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
+				} else {
+					graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, steps / steps_per_px, 42), 0, GCornerNone);
+				}
+
 			} else {
-				graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, steps / steps_per_px, 42), 0, GCornerNone);
+				APP_LOG(APP_LOG_LEVEL_INFO, "Not showing step goal");
+				graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
 			}
+			#endif
 		} else {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Steps not available in draw_horz");
 			graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
 		}
-	} else {
-		graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
 	}
-	#endif
 
 	graphics_context_set_fill_color(ctx, horz);
 	gpath_draw_filled(ctx, horz_rect);
@@ -430,9 +452,9 @@ static void draw_step_bar(Layer *layer, GContext *ctx) {
 	graphics_context_set_fill_color(ctx, diag);
 	graphics_context_set_stroke_color(ctx, diag);
 
-	#ifdef SHOW_DRAW_LOGS
+	/*#ifdef SHOW_DRAW_LOGS
 	APP_LOG(APP_LOG_LEVEL_INFO, "Steps/goal in draw step bar %d", steps / goal);
-	#endif
+	#endif*/
 }
 
 static void draw_batt(Layer *layer, GContext *ctx) {
@@ -519,7 +541,7 @@ static void main_window_load(Window *window) {
 	#ifdef DEMO_MODE 
 	text_layer_set_text(date_layer, "Mon 1");
 	#else
-	text_layer_set_text(date_layer, "Mon 00");
+	text_layer_set_text(date_layer, "WWW 55");
 	#endif
 	GSize date_size = text_layer_get_content_size(date_layer);
 	//layer_set_frame(text_layer_get_layer(date_layer), GRect(PBL_IF_ROUND_ELSE(29, 9), PBL_IF_ROUND_ELSE(time_size.h + 16, time_size.h - 2), date_size.w, date_size.h));
@@ -673,9 +695,7 @@ static void init() {
 	tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
 	battery_state_service_subscribe(batt_handler);
 	bluetooth_connection_service_subscribe(bt_handler);
-	#ifdef PBL_HEALTH
-		health_service_events_subscribe(health_handler, NULL);
-	#endif
+	health_service_events_subscribe(health_handler, NULL);
 
 	init_appmessage(); // Start appmessaging in messaging.c
 	init_animations(); // I like to move it move it
