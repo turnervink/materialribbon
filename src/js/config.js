@@ -171,6 +171,7 @@ module.exports = [
 				"appKey": "cityName",
 				"defaultValue": "",
 				"label": "City",
+				"description": "Enter a city to use for weather updates, or leave blank to use GPS location.",
 				"attributes": {
 					"placeholder": "",
 			}

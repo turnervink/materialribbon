@@ -243,12 +243,10 @@ static void health_handler(HealthEventType event, void *context) {
 	} else {
 		
 		if (mask & HealthServiceAccessibilityMaskAvailable) {
-				//steps_available = true;
 				APP_LOG(APP_LOG_LEVEL_INFO, "Step data available!");
 				steps = health_service_sum_today(HealthMetricStepCount);
 				APP_LOG(APP_LOG_LEVEL_INFO, "Steps: %d", steps);
 		} else {
-				//steps_available = false;
 				APP_LOG(APP_LOG_LEVEL_INFO, "Step data unavailable");
 		}
 		
@@ -411,9 +409,11 @@ static void draw_horz_rect(Layer *layer, GContext *ctx) {
 			#else
 			if (show_step_goal) {
 
-				if (steps >= 10000) {
+				if (steps >= stepgoal) {
+					APP_LOG(APP_LOG_LEVEL_INFO, "Step goal reached, showing full bar");
 					graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, bounds.size.w, 42), 0, GCornerNone);
 				} else {
+					APP_LOG(APP_LOG_LEVEL_INFO, "Drawing step goal progress bar");
 					graphics_fill_rect(ctx, GRect(PBL_IF_ROUND_ELSE(31, 0), 120, steps / steps_per_px, 42), 0, GCornerNone);
 				}
 
@@ -452,9 +452,9 @@ static void draw_step_bar(Layer *layer, GContext *ctx) {
 	graphics_context_set_fill_color(ctx, diag);
 	graphics_context_set_stroke_color(ctx, diag);
 
-	/*#ifdef SHOW_DRAW_LOGS
+	#ifdef SHOW_DRAW_LOGS
 	APP_LOG(APP_LOG_LEVEL_INFO, "Steps/goal in draw step bar %d", steps / goal);
-	#endif*/
+	#endif
 }
 
 static void draw_batt(Layer *layer, GContext *ctx) {

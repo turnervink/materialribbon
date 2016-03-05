@@ -51,8 +51,8 @@ function locationSuccess(pos) {
       var json = JSON.parse(responseText); // Parse JSON response
       console.log(JSON.parse(responseText));
 			
-			var cityinresponse = json.main.city;
-			console.log("City in response is" + cityinresponse);
+			var cityinresponse = json.name;
+			console.log("City in response is " + cityinresponse);
 
       var temperature = Math.round(((json.main.temp - 273.15) * 1.8) + 32); // Convert from Kelvin to Fahrenheit
       console.log("Temperature in Fahrenheit is " + temperature);
