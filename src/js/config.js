@@ -254,6 +254,18 @@ module.exports = [
 	},
 			
 	{
+		"type": "section",
+		"items": [
+			{
+			"type": "heading",
+			"id": "paypal-heading",
+			"defaultValue": "<a href=https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HHTTNFJDU82TC>Before you tap save, consider donating a dollar or two through PayPal by tapping here.</a>",
+			"size": 4
+			}
+		]
+	},
+			
+	{
   "type": "submit",
   "defaultValue": "Save"
 	}
