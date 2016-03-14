@@ -1,6 +1,7 @@
 var Clay = require('clay');
 var clayConfig = require('config');
-var clay = new Clay(clayConfig, null, { AutoHandleEvents: false});
+var customClay = require('showhideconfig');
+var clay = new Clay(clayConfig, customClay, {AutoHandleEvents: false});
 var city = "";
 
 var xhrRequest = function (url, type, callback) {

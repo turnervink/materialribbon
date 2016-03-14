@@ -257,10 +257,14 @@ module.exports = [
 		"type": "section",
 		"items": [
 			{
-			"type": "heading",
-			"id": "paypal-heading",
-			"defaultValue": "<a href=https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HHTTNFJDU82TC>Before you tap save, consider donating a dollar or two through PayPal by tapping here.</a>",
-			"size": 4
+				"type": "heading",
+				"id": "paypal-heading",
+				"defaultValue": "<h4 style='text-align:center;'>Before you tap save, consider donating a dollar or two through PayPal by tapping below.</h4>",
+				"size": 4
+			},
+			{
+			"type": "button",
+			"defaultValue": "<a style='color:white; text-decoration:none;' href='https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HHTTNFJDU82TC'>Donate</a>"
 			}
 		]
 	},
