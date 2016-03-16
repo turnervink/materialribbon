@@ -11,7 +11,7 @@ module.exports = [
 			{
 				"type": "heading",
 				"id": "dev-heading",
-				"defaultValue": "by Turner Vink",
+				"defaultValue": "<p style='text-align:center;'>by Turner Vink<br> <a href='http://www.turnervink.com' style='color:#FF4500; text-decoration:none;'>www.turnervink.com</a></p>",
 				"size": 6
 			},
 		]
@@ -201,6 +201,7 @@ module.exports = [
 				"min": 1000,
 				"max": 10000,
 				"step": 1000,
+				"description": "Step goal is represented by the shadow of the horizontal bar"
 			}
 		]
 	},
