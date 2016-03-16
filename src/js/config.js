@@ -37,31 +37,31 @@ module.exports = [
 						"value": "en"
 					},
 					{
-						"label": "French",
+						"label": "Français",
 						"value": "fr"
 					},
 					{
-						"label": "Spanish",
+						"label": "Español",
 						"value": "es"
 					},
 					{
-						"label": "German",
+						"label": "Deutsch",
 						"value": "de"
 					},
 					{
-						"label": "Russian",
+						"label": "русский язык",
 						"value": "ru"
 					},
 					{
-						"label": "Italian",
+						"label": "Italiano",
 						"value": "it"
 					},
 					{
-						"label": "Portuguese",
+						"label": "Português",
 						"value": "po"
 					},
 					{
-						"label": "Ukrainian",
+						"label": "український",
 						"value": "uk"
 					}
 				]
