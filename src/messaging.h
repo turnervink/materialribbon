@@ -15,6 +15,7 @@
 #define KEY_BATT_AS_NUM 11
 #define KEY_SHOW_STEPS 12
 #define KEY_STEP_GOAL 13
+#define KEY_CITY_NAME 14
 
 //#define DEMO_MODE
 
