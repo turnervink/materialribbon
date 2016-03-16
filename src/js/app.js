@@ -1,6 +1,6 @@
 var Clay = require('clay');
 var clayConfig = require('config');
-var customClay = require('showhideconfig');
+var customClay = require('custom-clay');
 var clay = new Clay(clayConfig, customClay, {AutoHandleEvents: false});
 var city = "";
 
