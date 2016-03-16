@@ -384,7 +384,7 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "KEY_STEP_GOAL received!");
 		#endif
 		
-		if (strcmp(stepgoal_tup->value->cstring, "10000") == 0) {
+		/*if (strcmp(stepgoal_tup->value->cstring, "10000") == 0) {
 			stepgoal = 10000;
 		} else if (strcmp(stepgoal_tup->value->cstring, "9000") == 0) {
 			stepgoal = 9000;
@@ -396,9 +396,9 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
 			stepgoal = 6000;
 		} else if (strcmp(stepgoal_tup->value->cstring, "5000") == 0) {
 			stepgoal = 5000;
-		}
+		}*/
 		
-  	//stepgoal = stepgoal_tup->value->int16;
+  	stepgoal = stepgoal_tup->value->int16;
 		
 		APP_LOG(APP_LOG_LEVEL_INFO, "stepgoal is %d", stepgoal);
 		persist_write_int(KEY_STEP_GOAL, stepgoal);

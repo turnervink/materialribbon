@@ -150,7 +150,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
 	var response = JSON.parse(e.response);
 	console.log(dict);
 	
-	city = response.cityName;
+	city = response.cityName.value;
 	console.log("Entered city is " + city);
 	localStorage.city = city;
 

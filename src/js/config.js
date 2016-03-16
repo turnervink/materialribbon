@@ -195,36 +195,12 @@ module.exports = [
 				"defaultValue": true
 			},
 			{
-				"type": "select",
+				"type": "slider",
 				"appKey": "stepGoal",
-				"defaultValue": "10000",
-				"label": "Step goal",
-				"options": [
-					{
-						"label": "10,000",
-						"value": "10000"
-					},
-					{
-						"label": "9,000",
-						"value": "9000"
-					},
-					{
-						"label": "8,000",
-						"value": "8000"
-					},
-					{
-						"label": "7,000",
-						"value": "7000"
-					},
-					{
-						"label": "6,000",
-						"value": "6000"
-					},
-					{
-						"label": "5,000",
-						"value": "5000"
-					}
-				]
+				"label":"Step goal",
+				"min": 1000,
+				"max": 10000,
+				"step": 1000,
 			}
 		]
 	},
