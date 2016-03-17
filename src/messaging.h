@@ -48,5 +48,6 @@ void update_time();
 void batt_handler(BatteryChargeState state);
 void update_weather();
 void pick_colours();
+void health_handler(HealthEventType event, void *context);
 
 extern const int WEATHER_ICONS[];

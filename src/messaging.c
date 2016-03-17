@@ -377,6 +377,14 @@ void inbox_received_handler(DictionaryIterator *iter, void *context) {
   	show_step_goal = showsteps_tup->value->int8;
 		
 		persist_write_int(KEY_SHOW_STEPS, show_step_goal);
+		
+		if (show_step_goal == 0) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Unsubscribing from Health events");
+			health_service_events_unsubscribe();
+		} else {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Subscribing to Health events");
+			health_service_events_subscribe(health_handler, NULL);
+		}
 	}
 	
 	if (stepgoal_tup) {

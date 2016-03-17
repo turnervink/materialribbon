@@ -233,7 +233,7 @@ static void bt_handler(bool connected) {
 	layer_mark_dirty(bt_layer);
 }
 
-static void health_handler(HealthEventType event, void *context) {
+void health_handler(HealthEventType event, void *context) {
 	time_t start = time_start_of_today();
 	time_t end = time(NULL);
 	HealthServiceAccessibilityMask mask = health_service_metric_accessible(HealthMetricStepCount, start, end);
@@ -638,10 +638,6 @@ static void main_window_load(Window *window) {
 		weatherupdatetime = persist_read_int(KEY_UPDATE_TIME);
 	}
 
-	if (persist_exists(KEY_SHOW_STEPS)) {
-		show_step_goal = persist_read_int(KEY_SHOW_STEPS);
-	}
-
 	if (persist_exists(KEY_STEP_GOAL)) {
 		stepgoal = persist_read_int(KEY_STEP_GOAL);
 	}
@@ -681,6 +677,18 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 
 static void init() {
   main_window = window_create();
+	
+	if (persist_exists(KEY_SHOW_STEPS)) {
+		show_step_goal = persist_read_int(KEY_SHOW_STEPS);
+	}
+	
+	if (show_step_goal == 0) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Unsubscribing from Health events");
+			health_service_events_unsubscribe();
+		} else {
+			APP_LOG(APP_LOG_LEVEL_INFO, "Subscribing to Health events");
+			health_service_events_subscribe(health_handler, NULL);
+		}
 
   window_set_window_handlers(main_window, (WindowHandlers) {
     .load = main_window_load,
@@ -695,7 +703,7 @@ static void init() {
 	tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
 	battery_state_service_subscribe(batt_handler);
 	bluetooth_connection_service_subscribe(bt_handler);
-	health_service_events_subscribe(health_handler, NULL);
+	
 
 	init_appmessage(); // Start appmessaging in messaging.c
 	init_animations(); // I like to move it move it
